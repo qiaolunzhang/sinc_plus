@@ -1,0 +1,21 @@
+data;
+
+param num_top:=5;
+
+#nodes and edges of the physical network
+param n := 10;
+
+set E := (1,2) (1,3) (1,7) (2,4) (2,7) (3,5) (4,8) (5,6) (5,7) (6,7) (6,9) (7,8) (7,9) (8,10) (9,10) ;
+
+#nodes and edges of the virtual networks
+set Nl[1] := 8 6 9 10 ;
+set Nl[2] := 1 3 7 4 ;
+set Nl[3] := 1 4 2 5 ;
+set Nl[4] := 9 5 4 10 ;
+set Nl[5] := 2 4 9 3 ;
+
+set El[1] := (6,8) (6,9) (9,10) (8,10) ;
+set El[2] := (1,3) (3,7) (4,7) (1,4) ;
+set El[3] := (1,4) (2,4) (2,5) (1,5) ;
+set El[4] := (5,9) (4,5) (4,10) (9,10) ;
+set El[5] := (2,4) (4,9) (3,9) (2,3) ;

@@ -1,0 +1,205 @@
+# SVNM against double link failures 
+reset;
+
+model SVNMagainstDoubleLinkFail.mod;
+
+option solver "cplex";
+
+# Support variable 
+param trovato;
+# first=1 if it is the first time 
+param first default 1;
+# If procedure==1 the model found all combinations of double link failures
+# otherwise a specific combination of link failure can be specified
+param procedure default 1;
+
+# Total values of wavelength consumption and availability
+param totw;
+param avail;
+# Number of datafile to run and starting file number
+param num_datafile default 10;
+param start_file default 1;
+# Sum and mean of wavelength consumption and availability (the latter is
+# expressed as the number of surviving VNs)
+param sum_w default 0;
+param sum_a default 0;
+param mean_w;
+param mean_a;
+# Mean number of surviving VNs
+param mean_s;
+# Min number of wavelength consumption and availability over all datafiles
+param min_w default 200000; 
+param min_a default 200000;
+param max_w default 0;
+param max_a default 0;
+
+# Run each datafile specifying the name of the file
+for {datafile in start_file..num_datafile}
+{
+	if (datafile==1) then
+	{
+		data "DatFiles/DataFile1.dat";
+	}
+	else if(datafile==2)then
+	{
+		update data;
+		data "DatFiles/DataFile2.dat";
+	}
+	else if(datafile==3)then
+	{
+		update data;
+		data "DatFiles/DataFile3.dat";
+	}
+	else if(datafile==4)then
+	{
+		update data;
+		data "DatFiles/DataFile4.dat";
+	}
+	else if(datafile==5)then
+	{
+		update data;
+		data "DatFiles/DataFile5.dat";
+	}
+	else if(datafile==6)then
+	{
+		update data;
+		data "DatFiles/DataFile6.dat";
+	}
+	else if(datafile==7)then
+	{
+		update data;
+		data "DatFiles/DataFile7.dat";
+	}
+	else if(datafile==8)then
+	{
+		update data;
+		data "DatFiles/DataFile8.dat";
+	}
+	else if(datafile==9)then
+	{
+		update data;
+		data "DatFiles/DataFile9.dat";
+	}
+	else
+	{
+		update data;
+		data "DatFiles/DataFile10.dat";
+	}
+	
+	
+	let first:=1;
+	# Only for the first file I compute all combinations of double link failures
+	# of the physical network (physical network does not change)
+	if(datafile==start_file) then
+	{
+		if (procedure==1) then
+		{
+		#Procedure to obtain all the double link failures combinations 
+		for{(i,j) in E}
+		{
+			for{(i2,j2) in E: i2<>i or j2<>j}
+			{
+				let trovato:=0;
+				# If it is not the first double link failure searched
+				if(first==0) then
+				{	
+					# Find if the combination of link selected has been not
+					# already considered
+					for{k in 0..comb}
+					{
+						if((i,j) in DF[k] and (i2,j2) in DF[k]) then
+							let trovato:=1;
+					}
+					
+					# If it is not already considered the combination of links
+					# is added to set DF (set with all double link failures)
+					if(trovato==0) then
+					{	
+						let comb:= comb+1;
+						let DF[comb]:= DF[comb] union {(i,j)};
+						let DF[comb]:= DF[comb] union {(i2,j2)};
+					}
+				}
+				# The first combination of links is for sure added to DF
+				else
+				{
+					let DF[comb]:= DF[comb] union {(i,j)};
+					let DF[comb]:= DF[comb] union {(i2,j2)};
+					let first:=0;
+				} 
+			}
+		}
+		}
+		# Specify the combination of double failing links
+		else
+		{
+			let DF[comb]:= DF[comb] union {(4,6)};
+			let DF[comb]:= DF[comb] union {(5,6)};
+			
+		}
+	}
+	
+	
+	#For every ring network add the links that allow that VN to become a 
+	#full-mesh network (minimum nodal degree = 3)
+	for{top in TOP}
+	{	
+		for{i in Nl[top]}
+			for{j in Nl[top]: i<j}
+				if((i,j) not in El[top]) then
+				{
+					let El[top] := El[top] union {(i,j)};
+				}
+	}
+	
+	solve;
+	
+	
+	let totw:=sum{(i,j) in A, (top,s,t) in Btot} q[i,j,top,s,t];
+	let sum_w := sum_w + totw;
+	# If wavelenth consumption of the considered datafile is the maximum one
+	# or the minimum one save its value
+	if(totw > max_w)then
+		let max_w:=totw;
+	
+	if(totw < min_w) then
+		let min_w:=totw;
+	
+	# Compute availability (in terms of number of surviving VNs), add it to 
+	# the sum and save maximum and minimum values
+	let avail:= (num_top*(comb+1)) - sum{top in TOP, k in COMB} av[top,k];
+	let sum_a := sum_a + avail;
+	
+	if(avail > max_a)then
+		let max_a:=avail;
+	
+	if(avail < min_a) then
+		let min_a:=avail;
+	
+	
+	printf "\nResult %d: %d %d\n", datafile, totw, avail > results.txt;
+
+}
+
+# Compute the mean of wavelengths, number of surviving VNs and availability
+let mean_w := sum_w/num_datafile;
+let mean_s:= sum_a/num_datafile;
+let mean_a:= (sum_a/num_datafile)/(num_top*(comb+1));
+
+printf "\nMean Wavelengths: %.1f", mean_w;
+printf "\nMin Wavelengths: %.1f", min_w;
+printf "\nMax Wavelengths: %.1f", max_w;
+
+printf "\n\nMean number of surviving VNs: %.1f", mean_s;
+printf "\nMin number of surviving VNs: %.1f", min_a;
+printf "\nMax number of surviving VNs: %.1f", max_a;
+
+printf "\n\nMean Availability: %.2f%", mean_a*100;
+printf "\nMin Availability: %.2f%", 100*min_a/(num_top*(comb+1));
+printf "\nMax Availability: %.2f%", 100*max_a/(num_top*(comb+1));
+
+printf "\nTotal running time: %.2f\n", _total_solve_time;
+printf "\nTotal running time: %.2f", _total_solve_time > results.txt;
+
+
+
