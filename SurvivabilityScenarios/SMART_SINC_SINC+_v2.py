@@ -560,8 +560,9 @@ def different_mapping(totMaps, link, totCut, totAv, wave, scenario):
                 new_av = get_availability_cutsets_total(totCut, newMap)
                 #print("Availability of the new mapping:",new_av)
                 if (new_av > totAv):
+                    print("Availability improved, new mapping saved")
                     if (scenario == 2 or scenario == 4):
-                        #print("Availability improved, new mapping saved")
+                        # print("Availability improved, new mapping saved")
                         totMaps[link] = newMap[link]
                         totAv = new_av
                     else:
@@ -583,7 +584,7 @@ def different_mapping(totMaps, link, totCut, totAv, wave, scenario):
                             for l in mapping[0]:
                                 P2[l[0]][l[1]]['weight'] += 1
                 else:
-                    #print("New availability value is not an improving one, mapping discarded")
+                    # print("New availability value is not an improving one, mapping discarded")
                     for l in mapping[0]:
                         P2[l[0]][l[1]]['weight'] += 1
             #else:
@@ -643,7 +644,7 @@ min_wave = 200000
 mean_av = 0
 mean_wave = 0
 #Survivability scenario
-scenario = 3
+scenario = 2
 
 #To start the clock
 time_start = time.time()
@@ -667,8 +668,8 @@ for datafile in range(start_file, end_file + 1):
 
     #Name of input files
     # file_name = 'Datfiles/DataFile' + str(datafile) + '.dat'
-    # file_name = 'DatafilesNew/tokyo/6vn/9vl/DataFile' + str(datafile) + '.dat'
-    file_name = 'All_datafiles_used/Ring/2 VNs/DataFile' + str(datafile) + '.dat'
+    # file_name = 'All_datafiles_used/Ring/2 VNs/DataFile' + str(datafile) + '.dat'
+    file_name = 'DatafilesNew/tokyo/6vn/6vl/DataFile' + str(datafile) + '.dat'
     # file_name = "previous_datafile/DataFile4" + ".dat"
     #Number of virtual networks (VNs)
     num_vn = read_number_of_VNs(file_name)
@@ -729,12 +730,12 @@ for datafile in range(start_file, end_file + 1):
         selfloop = False
         remainingCyTotal = []
         remainingCyTotalkey = []
-        bad = False
+        restart_begin_new_cycle_flag = False
         index2 = 0
         first = 0
 
         while nodes and variable is False:
-            if bad is False:  # if bad is false mean that I don't need to restart from the beginning with a new cycle
+            if restart_begin_new_cycle_flag is False:  # if bad is false mean that I don't need to restart from the beginning with a new cycle
                 first += 1  # needed for keeping track of the first loop of each iteration
                 Co = C.copy()  # copy of the real logical topology used to eliminate link without loosing keys
                 cnodes = []  # nodes that are present in the current cycle
@@ -750,6 +751,9 @@ for datafile in range(start_file, end_file + 1):
                 concatenate = []  # DON'T REMEMBER
                 # print(Co.edges(keys=True))
                 iterator = 0  # keep track of the number of time I enter in if later because I need to enter only one time (correct the code to make it function correctly)
+
+                # Co2 is just a copy of to keep track the nodes and links we have,
+                # and we can make changes of Co without losing the original information
                 Co2 = Co.copy()
                 for u, v, k in Co2.edges(keys=True):  # for each edge in the edges list
                     #print("Stampo",u,v,Co2.edges())
@@ -817,9 +821,10 @@ for datafile in range(start_file, end_file + 1):
 
                         #print("Co.nodes:",Co.nodes())
                         #print("Co.edges:",Co.edges())
-                        #try:
-                        short = nx.shortest_path(Co, source=u, target=v)
-                        #except:
+                        try:
+                            short = nx.shortest_path(Co, source=u, target=v)
+                        except:
+                            print("No path found for request", u, v)
                         #    Co.add_edge(u, v, key=k)
                         #    short = nx.shortest_path(Co,source=u, target=v)
                         #    added=1
@@ -898,7 +903,7 @@ for datafile in range(start_file, end_file + 1):
                     if selfloop is True:
                         nodes = []
                 #print('')
-            if bad is True:
+            if restart_begin_new_cycle_flag is True:
                 #print('returned back to the beginning')
 
                 C = L.copy()
@@ -1011,6 +1016,7 @@ for datafile in range(start_file, end_file + 1):
                             mappingShortest.append(sp_links)
                         #print("Mapping shortest:",mappingShortest)
 
+                        # todo: double check the meaning of : method = 2
                         method = 2
                         if (method == 1):
                             # find how many time a physical link is used in the mapping to identify if it is disjoint
@@ -1181,12 +1187,19 @@ for datafile in range(start_file, end_file + 1):
                             #print("P2.edges()",P2.edges())
 
                             mappingShortest_back2 = mappingShortest_back.copy()
+                            num_error_finding_path = 0
                             for link in altVirLink:
 
                                 #print("Mapping of virtual link:",link)
                                 #print("P2.edges:",P2.edges())
-                                sp = nx.shortest_path(P2, source=link[0], target=link[1],
+                                try:
+                                    sp = nx.shortest_path(P2, source=link[0], target=link[1],
                                                       weight='weight')
+                                except Exception as e:
+                                    print("Error finding the path")
+                                    num_error_finding_path += 1
+                                    continue
+                                    # assert "No path found"
 
                                 sp_links = []
                                 # convert the nodal form in a link form
@@ -1208,6 +1221,9 @@ for datafile in range(start_file, end_file + 1):
                                         mappingShortest_back2[count] = sp_links
                                     count += 1
                                 #print("Alternative mapping shortest:",mappingShortest_back2)
+
+                            if num_error_finding_path > 0:
+                                continue
 
                             #Count occurances of the new mapping
                             occurances = {}
@@ -1290,6 +1306,7 @@ for datafile in range(start_file, end_file + 1):
                     #else:
                     #    print('No link connected to the nodes of the cycle')
 
+                    # todo: check the part to create new nodes in C
                     newNode = convert(cnodes)
 
                     ed = []
@@ -1305,15 +1322,19 @@ for datafile in range(start_file, end_file + 1):
                             C.add_edge(newNode, newNode, key=k)
 
                         elif i in cnodes and j not in cnodes:
+                            C.add_edge(newNode, j, key=k)
 
-                            if nodeTotal == len(str(abs(newNode))):
-                                C.add_edge(newNode, newNode, key=k)
+                            C.remove_edge(i, j)
 
-                                C.remove_edge(i, j)
-                            else:
-                                C.add_edge(newNode, j, key=k)
-
-                                C.remove_edge(i, j)
+                            # todo: double check if the following
+                            # if nodeTotal == len(str(abs(newNode))):
+                            #     C.add_edge(newNode, newNode, key=k)
+                            #
+                            #     C.remove_edge(i, j)
+                            # else:
+                            #     C.add_edge(newNode, j, key=k)
+                            #
+                            #     C.remove_edge(i, j)
                     if len(nestedList) > 0:
                         #print('Remaining links', C.edges(keys=True))
                         CP = C.copy()
@@ -1321,12 +1342,12 @@ for datafile in range(start_file, end_file + 1):
                     #print('\n\nNo remaining links')
 
                 if var is False:
-                    bad = False
+                    restart_begin_new_cycle_flag = False
                 if len(remainingCy) < 1 and var is True:
                     var = False
                     #print("Remaining",remainingCy)
                     variable = False
-                    bad = True
+                    restart_begin_new_cycle_flag = True
                     index2 += 1
             if selfloop is False:
                 nodes = C.edges()
@@ -1496,11 +1517,11 @@ for datafile in range(start_file, end_file + 1):
                 #Map a single virtual link of a VN in a different way to see if a neighbour solution gets a greater availability value
                 totAv = different_mapping(totMaps, link, totCut, totAv, totW, scenario)
 
-    #print("\n\n########## LOCAL SEARCH RESULTS #########\n\n")
-    #print("Previous mapping:",backMaps)
-    #print("New mapping:",totMaps)
-    #print("Previous availability:",backAv)
-    #print("Total availability:",totAv)
+    print("\n\n########## LOCAL SEARCH RESULTS #########\n\n")
+    print("Previous mapping:",backMaps)
+    print("New mapping:",totMaps)
+    print("Previous availability:",backAv)
+    print("Total availability:",totAv)
 
     #Compute the total wavelength consumption of the new solution
     numWave = 0

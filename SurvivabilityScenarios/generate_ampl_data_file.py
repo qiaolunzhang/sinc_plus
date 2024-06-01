@@ -87,7 +87,7 @@ if __name__ == '__main__':
                                                      num_virtual_nodes=num_virtual_nodes,
                                                      num_virtual_links=num_virtual_link_min)
             for j in range(num_virtual_link_min, num_virtual_link_max+1):
-                folder_name = ("data/" + physical_topology + "/" + str(num_virtual_network)
+                folder_name = ("DatafilesNew/" + physical_topology + "/" + str(num_virtual_network)
                                + "vn/" + str(j) + "vl/")
                 # create the folder if it does not exist
                 if not os.path.exists(folder_name):
@@ -96,7 +96,7 @@ if __name__ == '__main__':
                 # write the data to the file
                 with open(file_name, "w") as file:
                     file.write("data;\n\n")
-                    file.write("param num_top:=" + str(num_physical_nodes) + ";\n\n")
+                    file.write("param num_top:=" + str(num_virtual_network) + ";\n\n")
                     file.write("#nodes and edges of the physical network\n")
                     file.write("param n := 23;\n\n")
 
@@ -114,7 +114,7 @@ if __name__ == '__main__':
                         line = "set El[" + str(virtual_network_index) + "] := "
                         virtual_links_list = network_environment.virtual_links_list_dict[virtual_network_index]
                         # line += " ".join(str(link) for link in virtual_links_list)
-                        line += " ".join("["+str(link[0])+","+str(link[1])+"]" for link in virtual_links_list)
+                        line += " ".join("("+str(link[0])+","+str(link[1])+")" for link in virtual_links_list)
                         line += ";\n"
                         file.write(line)
                 if j < num_virtual_link_max:
