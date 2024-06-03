@@ -1,10 +1,13 @@
 # SMART ALGORITHM FOR SURVIVABILITY
+import copy
 
 import networkx as nx
 import random
 import itertools
 from collections import Counter
 import time as time
+
+import numpy as np
 
 
 # Function to read the number of virtual networks that is a value present in the data file
@@ -64,7 +67,7 @@ def read_physical_topology(file_name):
 
 
 #read the logical topology specified as input from file
-def read_logical_topology(top, start_key, file_name):
+def read_logical_topology(top, start_key, file_name, vn_index=-1):
     #datafile = 'Ring4Node-' + str(datfileinstance+1) + '.dat'
     datafile = file_name
     num_logical_links = 0
@@ -114,7 +117,7 @@ def read_logical_topology(top, start_key, file_name):
         #print("LOGICAL EDGE ADDED with key",list_of_keys[l],":",L.edges())
         #print("start key + l:",start_key,l)
         #Combined network (Union of all virtual networks)
-        CB.add_edge(n1, n2, key=list_of_keys[start_key + l])
+        CB.add_edge(n1, n2, key=list_of_keys[start_key + l], vn=vn_index)
     #print("\n\nCombined network edges:",CB.edges())
     #print("Combined network nodes:\n\n",CB.nodes())
 
@@ -335,10 +338,38 @@ def get_availability_cutsets_total(totCut, totMaps):
     return toAv
 
 
+def find_shortest_path_in_contract_graph(req, C):
+    # get current virtual network index
+    vn_index = req[0]
+    # update the weight of the edges, assign higher weight for edges not in the same virtual network
+    # for edge in C.edges():
+    for u, v, key, data in C.edges(data=True, keys=True):
+        if data['vn'] != vn_index:
+            C[u][v][key]['weight'] = 1000
+        else:
+            C[v][u][key]['weight'] = 1
+    # find the shortest path in the contracted graph
+    try:
+        sp = nx.shortest_path(C, source=req[1], target=req[2], weight='weight')
+        # get the weight of the path
+        weight = nx.shortest_path_length(C, source=req[1], target=req[2], weight='weight')
+        if weight >= 1000:
+            sharing_flag = True
+        else:
+            sharing_flag = False
+    except nx.NetworkXNoPath:
+        sp = []
+        weight = np.Inf
+        sharing_flag = False
+    return sp, weight, sharing_flag
+
+
 #Compute the availability allowing inter-VN capacity sharing
 def get_availability_gateways(totMaps):
     numFail = 0
+    totNumVLwithSharing = 0
     av = {}
+    numVLwithSharingPerVNFailure_dic = {}
     for df in DF:
         #for each double failure find down virtual links
         virLinksDown = []
@@ -363,14 +394,25 @@ def get_availability_gateways(totMaps):
         #print("Virtual links down:",virLinksDown)
 
         found = [0 for i in range(1, num_vn + 1)]
+        numVLwithSharingList = [0 for i in range(1, num_vn + 1)]
+
         #print("Found:",found)
         #Find a path of each disconnected virtual link over the combined network (without failing links)
         for req in virLinksDown:
-            try:
-                sp = nx.shortest_path(CB2, req[1], req[2])
-            except nx.NetworkXNoPath:
-                #print("No path found for request",req,"with failure",numFail,":",df)
+            # todo: update the weight of the edges, assign higher wight for edges not in the same virtual network
+            sp, weight, sharing_flag = find_shortest_path_in_contract_graph(req, CB2)
+            if len(sp) == 0:
                 found[req[0] - 1] = 1
+            else:
+                if sharing_flag:
+                    numVLwithSharingList[req[0] - 1] += 1
+            # todo: check if the following five lines of code is needed
+            # try:
+            #     sp = nx.shortest_path(CB2, req[1], req[2])
+            # except nx.NetworkXNoPath:
+            #     #print("No path found for request",req,"with failure",numFail,":",df)
+            #     found[req[0] - 1] = 1
+
             #else:
             #print("Shortest path from",req[1],"to",req[2],"is:",sp)
 
@@ -381,6 +423,13 @@ def get_availability_gateways(totMaps):
             else:
                 av[vn, numFail] = 0
 
+            if numVLwithSharingList[vn - 1] > 0:
+                totNumVLwithSharing += numVLwithSharingList[vn - 1]
+                if (vn, numFail) in numVLwithSharingPerVNFailure_dic.keys():
+                    numVLwithSharingPerVNFailure_dic[(vn, numFail)] += numVLwithSharingList[vn - 1]
+                else:
+                    numVLwithSharingPerVNFailure_dic[(vn, numFail)] = numVLwithSharingList[vn - 1]
+
         numFail += 1
     #print("AV:",av)
     totFail = sum(av.values())
@@ -388,13 +437,16 @@ def get_availability_gateways(totMaps):
     #print("NumFail:",numFail)
     #print("TotFail:",totFail)
     #print("Availability with gateways:",totAvGw)
-    return totAvGw
+    return totAvGw, totNumVLwithSharing
 
 
 #Compute the availability allowing inter-VN capacity sharing and spare slice sharing
 def get_availability_gateways_shared_slice(totMaps, shMaps):
     numFail = 0
+    totNumVLwithSharing = 0
     av = {}
+    numVLwithSharingPerVNFailure_dic = {}
+
     for df in DF:
         #for each double failure find down virtual links
         virLinksDown = []
@@ -418,11 +470,19 @@ def get_availability_gateways_shared_slice(totMaps, shMaps):
         #print("Virtual links down:",virLinksDown)
 
         found = [0 for i in range(1, num_vn + 1)]
+        numVLwithSharingList = [0 for i in range(1, num_vn + 1)]
+
         #print("Found:",found)
         #Appluy inter-VN capacity sharing to reconnect disconnected virtual links through a path over the combined VN
         for req in virLinksDown:
             #Try to find a path in the combined virtual network
             try:
+                # todo: update the weight of the edges, assign higher wight for edges not in the same virtual network
+                CB2_copy = copy.deepcopy(CB2)
+                sp, weight, sharing_flag = find_shortest_path_in_contract_graph(req, CB2_copy)
+                if sharing_flag:
+                    numVLwithSharingList[req[0] - 1] += 1
+                # here we try to find again to force it go to except part
                 sp = nx.shortest_path(CB2, req[1], req[2])
             except nx.NetworkXNoPath:
                 #print("No path found for request",req,"with failure",numFail,":",df)
@@ -434,15 +494,31 @@ def get_availability_gateways_shared_slice(totMaps, shMaps):
                 #Compute spare slice links that are down
                 shLinksDown = []
                 for key in shMaps:
-                    for el in shMaps[key]:
-                        #print("Sto confrontando:",el,"con",df[0],"e",df[1])
-                        if (el == df[0] and key not in shLinksDown):
-                            shLinksDown.append(key)
-                        elif (el == df[1] and key not in shLinksDown):
-                            shLinksDown.append(key)
+                    current_path_list = shMaps[key]
+                    available_flag = False
+                    for current_path in current_path_list:
+                        available_flag_cur = True
+                        for el in current_path:
+                            if (el == df[0] and key not in shLinksDown):
+                                available_flag_cur = False
+                            elif (el == df[1] and key not in shLinksDown):
+                                available_flag_cur = False
+                        if available_flag_cur:
+                            available_flag = True
+                            break
+                    if not available_flag:
+                        shLinksDown.append(key)
+
+                    # for el in shMaps[key]:
+                    #     #print("Sto confrontando:",el,"con",df[0],"e",df[1])
+                    #     if (el == df[0] and key not in shLinksDown):
+                    #         shLinksDown.append(key)
+                    #     elif (el == df[1] and key not in shLinksDown):
+                    #         shLinksDown.append(key)
 
                 #Add spare slice links not down to the combined network
-                for l in SH.edges():
+                # for l in SH.edges():
+                for l in shMaps.keys():
                     if (l not in shLinksDown):
                         CB2.add_edge(l[0], l[1])
 
@@ -451,7 +527,14 @@ def get_availability_gateways_shared_slice(totMaps, shMaps):
                 try:
                     sp = nx.shortest_path(CB2, req[1], req[2])
                 except:
+                    sp = []
                     link_add = 1
+
+                # We are able to find a path in the combined network + shared spare slice
+                if len(sp) > 0:
+                    numVLwithSharingList[req[0] - 1] += 1
+                    # todo: update the number of virtual links that are reconnected through shared spare slice
+                    continue
 
                 #Map the new edge in the physical network
                 P2 = P.copy()
@@ -461,6 +544,7 @@ def get_availability_gateways_shared_slice(totMaps, shMaps):
                 #Mapping of the new added edge (the only constraint is not to use failing links)
                 try:
                     phy_sp = nx.shortest_path(P2, req[1], req[2])
+                    numVLwithSharingList[req[0] - 1] += 1
                 except nx.NetworkXNoPath:
                     #If no path is found it means that a node is disconnected from the physical network
                     found[req[0] - 1] = 1
@@ -477,10 +561,15 @@ def get_availability_gateways_shared_slice(totMaps, shMaps):
                             else:
                                 sp_links.append((phy_sp[jP + 1], phy_sp[jP]))
 
-                    shMaps[(req[1], req[2])] = sp_links
+                    if (req[1], req[2]) in shMaps.keys():
+                        shMaps[(req[1], req[2])].append(sp_links)
+                    else:
+                        shMaps[(req[1], req[2])] = [sp_links]
+                    # shMaps[(req[1], req[2])] = sp_links
 
                     if (link_add == 1):
                         #Add the new edge in the shared slice
+                        # todo: we may add two links between same end nodes
                         SH.add_edge(req[1], req[2])
                         #print("Sh edge added, SH edges:",SH.edges())
 
@@ -494,6 +583,13 @@ def get_availability_gateways_shared_slice(totMaps, shMaps):
                 av[vn, numFail] = 1
             else:
                 av[vn, numFail] = 0
+
+            if numVLwithSharingList[vn - 1] > 0:
+                totNumVLwithSharing += numVLwithSharingList[vn - 1]
+                if (vn, numFail) in numVLwithSharingPerVNFailure_dic.keys():
+                    numVLwithSharingPerVNFailure_dic[(vn, numFail)] += numVLwithSharingList[vn - 1]
+                else:
+                    numVLwithSharingPerVNFailure_dic[(vn, numFail)] = numVLwithSharingList[vn - 1]
 
         numFail += 1
     #print("AV:",av)
@@ -519,7 +615,7 @@ def get_availability_gateways_shared_slice(totMaps, shMaps):
     #print("Total wavelengths consumption:",totW*2+totW_sh*2)
     #print("Shmaps",shMaps)
 
-    return totAvGw
+    return totAvGw, totNumVLwithSharing
 
 
 # Function that tries to map a virtual link of a VN over a different path on the physical network
@@ -644,7 +740,7 @@ min_wave = 200000
 mean_av = 0
 mean_wave = 0
 #Survivability scenario
-scenario = 2
+scenario = 4
 
 #To start the clock
 time_start = time.time()
@@ -685,7 +781,7 @@ for datafile in range(start_file, end_file + 1):
         # the start_key is the key that I have to assign to the links of the logical network, it can mark the virtual link of the logical network
         # todo: check if the start_key can be used to identify the sharing of the virtual link
         start_key = CB.number_of_edges()
-        read_logical_topology(vn, start_key, file_name)
+        read_logical_topology(vn, start_key, file_name, vn_index=vn)
 
         nodeTotal = nx.number_of_nodes(L)
 
@@ -1536,17 +1632,23 @@ for datafile in range(start_file, end_file + 1):
 
     #Compute the availability considering inter-VN capacity sharing
     if (scenario == 3 or scenario == 4):
-        totAv = get_availability_gateways(totMaps)
+        totAv, totNumVLwithSharing = get_availability_gateways(totMaps)
 
     if (scenario == 7):
         shMaps = {}
         #Compute the availability considering inter-VN capacity sharing and spare slice sharing
-        totAv = get_availability_gateways_shared_slice(totMaps, shMaps)
+        totAv, totNumVLwithSharing = get_availability_gateways_shared_slice(totMaps, shMaps)
+
         #Added wavelengths (in the shared spare slice) computation
         totW_sh = 0
-        for path in shMaps:
-            for link in shMaps[path]:
-                totW_sh += 1
+        # for path in shMaps:
+        #     for link in shMaps[path]:
+        #         totW_sh += 1
+        for node_pair in shMaps:
+            path_list = shMaps[node_pair]
+            for path in path_list:
+                for link in path:
+                    totW_sh += 1
 
         #Total wavelength consumption computation
         numWave = 0

@@ -755,7 +755,7 @@ if __name__ == '__main__':
     #To start the clock
     time_start = time.time()
 
-    for scenario in [1, 7]:
+    for scenario in [1, 2, 3, 4, 7]:
         #For each data file
         for datafile in range(start_file, end_file + 1):
             #List of double failures of the physical network
@@ -1642,6 +1642,8 @@ if __name__ == '__main__':
             if (totAv > backAv):
                 print("AVAILABILITY IMPROVED FROM THE LOCAL SEARCH")
 
+            totNumVLwithSharing = 0
+
             #Compute the availability considering inter-VN capacity sharing
             if (scenario == 3 or scenario == 4):
                 totAv, totNumVLwithSharing = get_availability_gateways(totMaps)
@@ -1696,6 +1698,8 @@ if __name__ == '__main__':
             results_folder = "results/tokyo/"
             results_folder = (results_folder + str(cur_num_vn) + "vn/" + str(cur_num_vl) + "vl/" + "scenario-"
                               + str(scenario) + "_instance_" + str(datafile) + ".txt")
+            with open(results_folder, 'w') as f:
+                line = str
 
         mean_av = sum_av / num_datafile
         mean_wave = sum_wave / num_datafile
