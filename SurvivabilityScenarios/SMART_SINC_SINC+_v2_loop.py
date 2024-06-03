@@ -8,6 +8,7 @@ from collections import Counter
 import time as time
 import numpy as np
 import sys
+import os
 
 
 # Function to read the number of virtual networks that is a value present in the data file
@@ -434,10 +435,11 @@ def get_availability_gateways(totMaps):
     #print("AV:",av)
     totFail = sum(av.values())
     totAvGw = numFail * num_vn - totFail
+    averageNumVLwithSharing = totNumVLwithSharing / (len(DF) * num_vn)
     #print("NumFail:",numFail)
     #print("TotFail:",totFail)
     #print("Availability with gateways:",totAvGw)
-    return totAvGw, totNumVLwithSharing
+    return totAvGw, totNumVLwithSharing, averageNumVLwithSharing
 
 
 #Compute the availability allowing inter-VN capacity sharing and spare slice sharing
@@ -615,8 +617,9 @@ def get_availability_gateways_shared_slice(totMaps, shMaps):
     #print("Wavelengths consumption of the shared slice:",totW_sh*2)
     #print("Total wavelengths consumption:",totW*2+totW_sh*2)
     #print("Shmaps",shMaps)
+    averageNumVLwithSharing = totNumVLwithSharing / (len(DF) * num_vn)
 
-    return totAvGw, totNumVLwithSharing
+    return totAvGw, totNumVLwithSharing, averageNumVLwithSharing
 
 
 # Function that tries to map a virtual link of a VN over a different path on the physical network
@@ -753,11 +756,12 @@ if __name__ == '__main__':
     scenario = 4
 
     #To start the clock
-    time_start = time.time()
 
     for scenario in [1, 2, 3, 4, 7]:
         #For each data file
         for datafile in range(start_file, end_file + 1):
+            time_start = time.time()
+
             #List of double failures of the physical network
             DF = []
             #Availability and Total Wavelength Consumption values
@@ -781,6 +785,12 @@ if __name__ == '__main__':
             # file_name = "previous_datafile/DataFile4" + ".dat"
             #Number of virtual networks (VNs)
             num_vn = read_number_of_VNs(file_name)
+
+            # P is the physical network
+            P = nx.Graph()
+            read_physical_topology(file_name)
+            # Find all possible combinations of double link failures in the physical network
+            numFail = find_double_failures(DF)
 
             #For each VN
             # todo: check if we find the routing of each VN separately without considering the other VNs
@@ -1493,8 +1503,8 @@ if __name__ == '__main__':
 
                     ####################### AVAILABILITY COMPUTATION #################################
                     #Find all possible combinations of double link failures in the physical network (only for the first VN since the physical network is only one)
-                    if (vn == 1):
-                        numFail = find_double_failures(DF)
+                    # if (vn == 1):
+                    #     numFail = find_double_failures(DF)
                     #print("Double Failures:",DF)
 
                     used_links = []
@@ -1643,15 +1653,16 @@ if __name__ == '__main__':
                 print("AVAILABILITY IMPROVED FROM THE LOCAL SEARCH")
 
             totNumVLwithSharing = 0
+            averageNumVLwithSharing = 0
 
             #Compute the availability considering inter-VN capacity sharing
             if (scenario == 3 or scenario == 4):
-                totAv, totNumVLwithSharing = get_availability_gateways(totMaps)
+                totAv, totNumVLwithSharing, averageNumVLwithSharing = get_availability_gateways(totMaps)
 
             if (scenario == 7):
                 shMaps = {}
                 #Compute the availability considering inter-VN capacity sharing and spare slice sharing
-                totAv, totNumVLwithSharing = get_availability_gateways_shared_slice(totMaps, shMaps)
+                totAv, totNumVLwithSharing, averageNumVLwithSharing = get_availability_gateways_shared_slice(totMaps, shMaps)
 
                 #Added wavelengths (in the shared spare slice) computation
                 totW_sh = 0
@@ -1695,11 +1706,22 @@ if __name__ == '__main__':
             if (totW > max_wave):
                 max_wave = totW
 
+            # End time
+            time_elapsed = (time.time() - time_start)
+            print("Computational time:", time_elapsed)
+
+            cur_availability = round(totAv / ((num_vn * numFail)) * 100, 2)
+
             results_folder = "results/tokyo/"
-            results_folder = (results_folder + str(cur_num_vn) + "vn/" + str(cur_num_vl) + "vl/" + "scenario-"
-                              + str(scenario) + "_instance_" + str(datafile) + ".txt")
+            results_folder = results_folder + str(cur_num_vn) + "vn/" + str(cur_num_vl) + "vl/"
+            # create the folder if it does not exist
+            if not os.path.exists(results_folder):
+                os.makedirs(results_folder)
+            results_folder = results_folder + "scenario-" + str(scenario) + "_instance_" + str(datafile) + ".txt"
             with open(results_folder, 'w') as f:
-                line = str
+                line = str(cur_availability) + " " + str(totW) + " " + str(totNumVLwithSharing)
+                line = line + " " + str(averageNumVLwithSharing) + " " + str(time_elapsed) + "\n"
+                f.write(line)
 
         mean_av = sum_av / num_datafile
         mean_wave = sum_wave / num_datafile
@@ -1715,6 +1737,3 @@ if __name__ == '__main__':
         print("Min Availability:", round(min_av / ((num_vn * numFail)) * 100, 2))
         print("Max Availability:", round(max_av / ((num_vn * numFail)) * 100, 2))
 
-        #End time
-        time_elapsed = (time.time() - time_start)
-        print("Computational time:", time_elapsed)
