@@ -31,3 +31,7 @@ for i, j, k in nestedList:
 - Logic error in calculating the availability with spare slice: 
   there should be multiple links between the same node pair to 
   takes into account of different mapping of the virtual link
+
+- Error in constructing the cycles: the code should consider that
+  which edge to select among the multiple edges between the same
+  node pair. This is captured in contractedLink3

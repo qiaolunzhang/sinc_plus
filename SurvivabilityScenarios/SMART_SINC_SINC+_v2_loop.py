@@ -440,7 +440,10 @@ def get_availability_gateways(totMaps):
     #print("AV:",av)
     totFail = sum(av.values())
     totAvGw = numFail * num_vn - totFail
-    averageNumVLwithSharing = totNumVLwithSharing / (len(DF) * num_vn)
+    # averageNumVLwithSharing = totNumVLwithSharing / (len(DF) * num_vn)
+    # here we divide by the number of vn that are not disconnected
+    averageNumVLwithSharing = totNumVLwithSharing / totAvGw
+
     #print("NumFail:",numFail)
     #print("TotFail:",totFail)
     #print("Availability with gateways:",totAvGw)
@@ -622,7 +625,9 @@ def get_availability_gateways_shared_slice(totMaps, shMaps):
     #print("Wavelengths consumption of the shared slice:",totW_sh*2)
     #print("Total wavelengths consumption:",totW*2+totW_sh*2)
     #print("Shmaps",shMaps)
-    averageNumVLwithSharing = totNumVLwithSharing / (len(DF) * num_vn)
+    # averageNumVLwithSharing = totNumVLwithSharing / (len(DF) * num_vn)
+    # here we divide by the number of vn that are not disconnected
+    averageNumVLwithSharing = totNumVLwithSharing / totAvGw
 
     return totAvGw, totNumVLwithSharing, averageNumVLwithSharing
 
@@ -736,7 +741,7 @@ if __name__ == '__main__':
         num_instances = int(sys.argv[3])
     else:
         cur_num_vn = 6
-        cur_num_vl = 6
+        cur_num_vl = 10
         num_instances = 1
 
     #First file and last file to run
@@ -787,6 +792,7 @@ if __name__ == '__main__':
             # file_name = 'All_datafiles_used/Ring/2 VNs/DataFile' + str(datafile) + '.dat'
             # file_name = 'DatafilesNew/tokyo/6vn/6vl/DataFile' + str(datafile) + '.dat'
             file_name = 'DatafilesNew/tokyo/' + str(cur_num_vn) + 'vn/' + str(cur_num_vl) + 'vl/DataFile' + str(datafile) + '.dat'
+            file_name = 'DatafilesNew/tokyo/' + str(cur_num_vn) + 'vn/' + str(cur_num_vl) + 'vl/DataFile' + str(2) + '.dat'
             # file_name = "previous_datafile/DataFile4" + ".dat"
             #Number of virtual networks (VNs)
             num_vn = read_number_of_VNs(file_name)
@@ -980,9 +986,12 @@ if __name__ == '__main__':
                                     # in order to get the real information of the link to be mapped
                                     # find element that has that key in the list
                                     # I connect the link of the cycle with their keys
+                                    # !!! Note that we may add the same link twice as we may have two links between the same nodes
                                     contractedLink.append([i for i in alllinks if all(x in i for x in j)])
 
+                                # Here I remove the duplicates in the list of links
                                 contractedLink2 = list(contractedLink for contractedLink, _ in itertools.groupby(contractedLink))
+                                # In a single list, may may also have more than one link between the same nodes
                                 contractedLink4 = list(contractedLink2[
                                                            0])  # I create this new variable in the case there are more then two links between a couple of nodes
 
@@ -991,8 +1000,30 @@ if __name__ == '__main__':
                                 contractedLink3 = []
                                 if len(contractedLink4) > 2:  # check if there are more then two links
                                     try:
+                                        edge_usage_dic = {}
                                         for u in range(len(linking)):
-                                            contractedLink3.append(contractedLink4[u])
+                                            linking_edge = linking[u]
+                                            if (linking_edge[0], linking_edge[1]) in edge_usage_dic:
+                                                edge_usage_dic[(linking_edge[0], linking_edge[1])] += 1
+                                                cur_edge_usage_index = edge_usage_dic[(linking_edge[0], linking_edge[1])]
+                                            elif (linking_edge[1], linking_edge[0]) in edge_usage_dic:
+                                                edge_usage_dic[(linking_edge[1], linking_edge[0])] += 1
+                                                cur_edge_usage_index = edge_usage_dic[(linking_edge[1], linking_edge[0])]
+                                            else:
+                                                edge_usage_dic[(linking_edge[0], linking_edge[1])] = 0
+                                                cur_edge_usage_index = 0
+                                            for contractedLink2_element in contractedLink2:
+                                                contractedLink2_element_first_edge = contractedLink2_element[0]
+                                                if contractedLink2_element_first_edge[0] == linking_edge[0] and contractedLink2_element_first_edge[1] == linking_edge[1]:
+                                                    contractedLink2_element_selected_edge = contractedLink2_element[cur_edge_usage_index]
+                                                    contractedLink3.append(contractedLink2_element_selected_edge)
+                                                    break
+                                                elif contractedLink2_element_first_edge[1] == linking_edge[0] and contractedLink2_element_first_edge[0] == linking_edge[1]:
+                                                    contractedLink2_element_selected_edge = contractedLink2_element[cur_edge_usage_index]
+                                                    contractedLink3.append(contractedLink2_element_selected_edge)
+                                                    break
+                                        # for u in range(len(linking)):
+                                        #     contractedLink3.append(contractedLink4[u])
                                     except Exception as e:
                                         line = str(cur_num_vn) + " " + str(cur_num_vl) + " " + str(datafile) + " " + str(scenario)
                                         raise Exception(line)
