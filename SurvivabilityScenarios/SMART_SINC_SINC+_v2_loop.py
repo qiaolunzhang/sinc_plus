@@ -947,7 +947,9 @@ if __name__ == '__main__':
                                 try:
                                     short = nx.shortest_path(Co, source=u, target=v)
                                 except:
+                                    # todo: double check here
                                     print("No path found for request", u, v)
+                                    continue
                                 #    Co.add_edge(u, v, key=k)
                                 #    short = nx.shortest_path(Co,source=u, target=v)
                                 #    added=1
@@ -980,8 +982,7 @@ if __name__ == '__main__':
                                     # I connect the link of the cycle with their keys
                                     contractedLink.append([i for i in alllinks if all(x in i for x in j)])
 
-                                contractedLink2 = list(
-                                    contractedLink for contractedLink, _ in itertools.groupby(contractedLink))
+                                contractedLink2 = list(contractedLink for contractedLink, _ in itertools.groupby(contractedLink))
                                 contractedLink4 = list(contractedLink2[
                                                            0])  # I create this new variable in the case there are more then two links between a couple of nodes
 
@@ -989,8 +990,13 @@ if __name__ == '__main__':
                                 #print("ContractedLink4:",contractedLink4)
                                 contractedLink3 = []
                                 if len(contractedLink4) > 2:  # check if there are more then two links
-                                    for u in range(len(linking)):
-                                        contractedLink3.append(contractedLink4[u])
+                                    try:
+                                        for u in range(len(linking)):
+                                            contractedLink3.append(contractedLink4[u])
+                                    except Exception as e:
+                                        line = str(cur_num_vn) + " " + str(cur_num_vl) + " " + str(datafile) + " " + str(scenario)
+                                        raise line
+                                        # raise e
 
                                     flag = 1
                                     #print("ContractedLink3:",contractedLink3)
