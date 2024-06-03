@@ -100,6 +100,11 @@ def read_logical_topology(top, start_key, file_name, vn_index=-1):
                      'qq', 'rr', 'ss', 'tt', 'uu', 'vv', 'ww', 'xx', 'yy', 'zz', 'ab', 'b2', 'cb', 'db', 'eb', 'fb',
                      'gb', 'hb', 'ib', 'jb', 'kb', 'lb', 'mb', 'nb', 'ob', 'pb', 'qb', 'rb', 'sb', 'tb', 'ub', 'vb',
                      'wb', 'xb', 'yb', 'zb']
+    list_of_keys_tmp_all = []
+    for i in range(0, 100):
+        list_of_keys_temp = [ele + str(i) for ele in list_of_keys]
+        list_of_keys_tmp_all.extend(list_of_keys_temp)
+    list_of_keys.extend(list_of_keys_tmp_all)
 
     for el in list_of_keys2:
         list_of_keys.append(el)
