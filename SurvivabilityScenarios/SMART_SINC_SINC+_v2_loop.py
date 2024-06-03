@@ -995,7 +995,7 @@ if __name__ == '__main__':
                                             contractedLink3.append(contractedLink4[u])
                                     except Exception as e:
                                         line = str(cur_num_vn) + " " + str(cur_num_vl) + " " + str(datafile) + " " + str(scenario)
-                                        raise line
+                                        raise Exception(line)
                                         # raise e
 
                                     flag = 1
