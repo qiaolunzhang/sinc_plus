@@ -64,7 +64,7 @@ for ((i=6; i<=30; i+=6)); do
   for ((j=6; j<=15; j+=1)); do
     # Uncomment the line below for your specific use case
     # python3 runHeuristicIns.py $j & # Example with a Python script
-    python3 SMART_SINC_SINC+_loop.py $i $j 10 & # Running Python script with two arguments
+    python3 SMART_SINC_SINC+_v2_loop.py $i $j 10 & # Running Python script with two arguments
     # cust_func $j & # Example with a custom function
   done
   # Wait for all background processes started in the loop to complete before continuing
