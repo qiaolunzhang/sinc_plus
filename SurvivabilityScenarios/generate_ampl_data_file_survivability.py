@@ -886,7 +886,8 @@ if __name__ == '__main__':
                           (8, 23), (9, 10), (9, 11), (9, 13), (10, 11), (10, 12), (10, 13), (11, 12), (12, 13),
                           (12, 15), (14, 15), (14, 20), (15, 20), (16, 17), (16, 19), (16, 20), (17, 18), (17, 19),
                           (18, 21), (19, 20), (21, 22), (22, 23)]
-    num_virtual_network_list = [6, 12, 18, 24, 30]
+    # num_virtual_network_list = [6, 12, 18, 24, 30]
+    num_virtual_network_list = [5, 10, 15, 20, 25]
     num_virtual_nodes = 6
     num_virtual_link_min = num_virtual_nodes
     num_virtual_link_max = int(num_virtual_nodes * (num_virtual_nodes - 1) / 2)

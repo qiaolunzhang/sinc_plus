@@ -684,15 +684,16 @@ def different_mapping(totMaps, link, totCut, totAv, wave, scenario):
                             numWaveNew += 1
                         for l in totMaps[link]:
                             numWave += 1
-                        #If wavelengths consumption is equal than before, then save the new mapping
-                        if (numWaveNew * 2 == numWave * 2):
+                        #If wavelengths consumption is smaller or equal than before, then save the new mapping
+                        if (numWaveNew * 2 <= numWave * 2):
                             #print("Availability improved, new mapping saved")
                             totMaps[link] = newMap[link]
                             totAv = new_av
-                        else:
-                            #print("New availability value is an improving one, but wavelengths consumption is larger -> mapping discarded")
-                            for l in mapping[0]:
-                                P2[l[0]][l[1]]['weight'] += 1
+                        # todo: double-check if we need to uncomment the following lines
+                        # else:
+                        #     #print("New availability value is an improving one, but wavelengths consumption is larger -> mapping discarded")
+                        #     for l in mapping[0]:
+                        #         P2[l[0]][l[1]]['weight'] += 1
                 else:
                     # print("New availability value is not an improving one, mapping discarded")
                     for l in mapping[0]:
@@ -741,7 +742,7 @@ if __name__ == '__main__':
         num_instances = int(sys.argv[3])
     else:
         cur_num_vn = 6
-        cur_num_vl = 10
+        cur_num_vl = 7
         num_instances = 1
 
     #First file and last file to run

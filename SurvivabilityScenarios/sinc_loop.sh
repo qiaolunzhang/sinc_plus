@@ -68,7 +68,7 @@ for ((i=6; i<=30; i+=6)); do
     # cust_func $j & # Example with a custom function
   done
   # Wait for all background processes started in the loop to complete before continuing
-  wait
+#  wait
 done
 
 ## Put all cust_func in the background and bash
