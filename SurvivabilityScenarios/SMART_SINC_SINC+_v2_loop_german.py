@@ -240,8 +240,15 @@ def get_cutsets(vn, totCut):
     #print("Cutsets:", cutsets)
 
     #remove the last and the first element of the list because are empty
-    cutsets.pop(cont - 1)
-    cutsets.pop(0)
+    # cutsets.pop(cont - 1)
+    # cutsets.pop(0)
+    # Check and remove the last element if it's empty and the index exists
+    if len(cutsets) > 0 and len(cutsets[-1]) == 0:
+        cutsets.pop(-1)
+
+    # Check and remove the first element if it's empty and the list is not empty after previous operation
+    if len(cutsets) > 0 and len(cutsets[0]) == 0:
+        cutsets.pop(0)
 
     totCut = [x for x in totCut if x]
     #print("totCut:",totCut)
