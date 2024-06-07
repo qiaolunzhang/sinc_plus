@@ -712,12 +712,19 @@ def different_mapping(totMaps, link, totCut, totAv, wave, scenario, no_increasin
             newMap[link] = mapping[0]
             #Verify if the new mapping is survivable
             surv = verify_survivability(newMap, totCut)
+            # we do not need the following code, as surve already checked it
+            # surv_single_failure_flag = get_availability_cutsets_single_failure_one_vn(totCut, newMap, link[0])
+            if scenario > 2:
+                totAv, curTotNumVLwithSharing, curAverageNumVLwithSharing = get_availability_gateways(totMaps)
             if (surv == True):
                 #print("SURVIVABLE MAPPING")
                 #print("Link",link,"mapped on new path",mapping)
 
                 #Compute the new availability value
-                new_av = get_availability_cutsets_total(totCut, newMap)
+                if scenario <= 2:
+                    new_av = get_availability_cutsets_total(totCut, newMap)
+                else:
+                    new_av, curTotNumVLwithSharing, curAverageNumVLwithSharing = get_availability_gateways(totMaps)
                 #print("Availability of the new mapping:",new_av)
                 if (new_av > totAv):
                     print("Availability improved, new mapping saved")
@@ -730,18 +737,18 @@ def different_mapping(totMaps, link, totCut, totAv, wave, scenario, no_increasin
                         numWave += 1
 
                     if (scenario == 2 or scenario == 4):
-                        # print("Current link: ", link)
-                        # print("Previous mapping: ", totMaps[link])
-                        # print("Current mapping: ", newMap[link])
-                        # testTotNumWaveNew = 0
-                        # testTotNumWave = 0
-                        # for test_link in newMap.keys():
-                        #     for l in newMap[test_link]:
-                        #         testTotNumWaveNew += 1
-                        #     for l in totMaps[test_link]:
-                        #         testTotNumWave += 1
-                        # print("Previous number of wavelengths: ", testTotNumWave)
-                        # print("Current number of wavelengths: ", testTotNumWaveNew)
+                        print("Current link: ", link)
+                        print("Previous mapping: ", totMaps[link])
+                        print("Current mapping: ", newMap[link])
+                        testTotNumWaveNew = 0
+                        testTotNumWave = 0
+                        for test_link in newMap.keys():
+                            for l in newMap[test_link]:
+                                testTotNumWaveNew += 1
+                            for l in totMaps[test_link]:
+                                testTotNumWave += 1
+                        print("Previous number of wavelengths: ", testTotNumWave)
+                        print("Current number of wavelengths: ", testTotNumWaveNew)
                         print("Availability improved, new mapping saved")
                         if no_increasing_wave_flag:
                             if (numWaveNew * 2 <= numWave * 2):
@@ -755,18 +762,18 @@ def different_mapping(totMaps, link, totCut, totAv, wave, scenario, no_increasin
 
                         #If wavelengths consumption is smaller or equal than before, then save the new mapping
                         if (numWaveNew * 2 <= numWave * 2):
-                            # print("Current link: ", link)
-                            # print("Previous mapping: ", totMaps[link])
-                            # print("Current mapping: ", newMap[link])
-                            # testTotNumWaveNew = 0
-                            # testTotNumWave = 0
-                            # for test_link in newMap.keys():
-                            #     for l in newMap[test_link]:
-                            #         testTotNumWaveNew += 1
-                            #     for l in totMaps[test_link]:
-                            #         testTotNumWave += 1
-                            # print("Previous number of wavelengths: ", testTotNumWave)
-                            # print("Current number of wavelengths: ", testTotNumWaveNew)
+                            print("Current link: ", link)
+                            print("Previous mapping: ", totMaps[link])
+                            print("Current mapping: ", newMap[link])
+                            testTotNumWaveNew = 0
+                            testTotNumWave = 0
+                            for test_link in newMap.keys():
+                                for l in newMap[test_link]:
+                                    testTotNumWaveNew += 1
+                                for l in totMaps[test_link]:
+                                    testTotNumWave += 1
+                            print("Previous number of wavelengths: ", testTotNumWave)
+                            print("Current number of wavelengths: ", testTotNumWaveNew)
                             print("Availability improved, new mapping saved")
                             totMaps[link] = newMap[link]
                             totAv = new_av
@@ -1889,7 +1896,7 @@ if __name__ == '__main__':
 
             cur_availability = round(totAv / ((num_vn * numFail)) * 100, 2)
 
-            results_folder = "results/german/"
+            results_folder = "results/german-one-step/"
             results_folder = results_folder + str(cur_num_vn) + "vn/" + str(cur_num_vl) + "vl/"
             # create the folder if it does not exist
             if not os.path.exists(results_folder):

@@ -261,9 +261,17 @@ def get_availability_cutsets(cutsets, mapsOrd):
         for key in mapsOrd:
             for el in mapsOrd[key]:
                 #print("Sto confrontando:",el,"con",df[0],"e",df[1])
-                if (el == df[0]):
+                # if (el == df[0]):
+                #     virLinksDown.append(key)
+                # elif (el == df[1]):
+                #     virLinksDown.append(key)
+                if (el[0] == df[0][0] and el[1] == df[0][1]):
                     virLinksDown.append(key)
-                elif (el == df[1]):
+                elif (el[0] == df[0][1] and el[1] == df[0][0]):
+                    virLinksDown.append(key)
+                elif (el[0] == df[1][0] and el[1] == df[1][1]):
+                    virLinksDown.append(key)
+                elif (el[0] == df[1][1] and el[1] == df[1][0]):
                     virLinksDown.append(key)
         #print("Physical links down",df[0],df[1],"-> Virtual links down:",virLinksDown)
 
@@ -310,9 +318,17 @@ def get_availability_cutsets_total(totCut, totMaps):
                 if key[0] != vn:
                     continue
                 for el in totMaps[key]:
-                    if (el == df[0]):
+                    # if (el == df[0]):
+                    #     virLinksDown.append(key)
+                    # elif (el == df[1]):
+                    #     virLinksDown.append(key)
+                    if (el[0] == df[0][0] and el[1] == df[0][1]):
                         virLinksDown.append(key)
-                    elif (el == df[1]):
+                    elif (el[0] == df[0][1] and el[1] == df[0][0]):
+                        virLinksDown.append(key)
+                    elif (el[0] == df[1][0] and el[1] == df[1][1]):
+                        virLinksDown.append(key)
+                    elif (el[0] == df[1][1] and el[1] == df[1][0]):
                         virLinksDown.append(key)
             #print("Physical links down",df[0],df[1],"-> Virtual links down:",virLinksDown)
 
@@ -381,9 +397,17 @@ def get_availability_gateways(totMaps):
         virLinksDown = []
         for key in totMaps:
             for el in totMaps[key]:
-                if (el == df[0] and key not in virLinksDown):
+                # if (el == df[0] and key not in virLinksDown):
+                #     virLinksDown.append(key)
+                # elif (el == df[1] and key not in virLinksDown):
+                #     virLinksDown.append(key)
+                if (el[0] == df[0][0] and el[1] == df[0][1]):
                     virLinksDown.append(key)
-                elif (el == df[1] and key not in virLinksDown):
+                elif (el[0] == df[0][1] and el[1] == df[0][0]):
+                    virLinksDown.append(key)
+                elif (el[0] == df[1][0] and el[1] == df[1][1]):
+                    virLinksDown.append(key)
+                elif (el[0] == df[1][1] and el[1] == df[1][0]):
                     virLinksDown.append(key)
         #print("Physical links down",df[0],df[1],"-> Virtual links down:",virLinksDown)
 
@@ -394,8 +418,10 @@ def get_availability_gateways(totMaps):
         for link in virLinksDown:
             if ((link[1], link[2]) in CB2.edges()):
                 CB2.remove_edge(link[1], link[2])
-            else:
+            elif ((link[2], link[1]) in CB2.edges()):
                 CB2.remove_edge(link[2], link[1])
+            # else:
+            #     CB2.remove_edge(link[2], link[1])
 
         #print("Virtual links down:",virLinksDown)
 
@@ -462,9 +488,17 @@ def get_availability_gateways_shared_slice(totMaps, shMaps):
         virLinksDown = []
         for key in totMaps:
             for el in totMaps[key]:
-                if (el == df[0] and key not in virLinksDown):
+                # if (el == df[0] and key not in virLinksDown):
+                #     virLinksDown.append(key)
+                # elif (el == df[1] and key not in virLinksDown):
+                #     virLinksDown.append(key)
+                if (el[0] == df[0][0] and el[1] == df[0][1]):
                     virLinksDown.append(key)
-                elif (el == df[1] and key not in virLinksDown):
+                elif (el[0] == df[0][1] and el[1] == df[0][0]):
+                    virLinksDown.append(key)
+                elif (el[0] == df[1][0] and el[1] == df[1][1]):
+                    virLinksDown.append(key)
+                elif (el[0] == df[1][1] and el[1] == df[1][0]):
                     virLinksDown.append(key)
         #print("Physical links down",df[0],df[1],"-> Virtual links down:",virLinksDown)
 
@@ -474,7 +508,9 @@ def get_availability_gateways_shared_slice(totMaps, shMaps):
         for link in virLinksDown:
             if ((link[1], link[2]) in CB2.edges()):
                 CB2.remove_edge(link[1], link[2])
-            else:
+            # else:
+            #     CB2.remove_edge(link[2], link[1])
+            elif ((link[2], link[1]) in CB2.edges()):
                 CB2.remove_edge(link[2], link[1])
 
         #print("Virtual links down:",virLinksDown)

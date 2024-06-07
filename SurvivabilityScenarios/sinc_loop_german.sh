@@ -71,6 +71,19 @@ for ((i=2; i<=6; i+=1)); do
 #  wait
 done
 
+# Loop from 1 to 100 in steps of 10
+for ((i=2; i<=6; i+=1)); do
+  # Launch a batch of 10 instances in parallel
+  for ((j=6; j<=15; j+=9)); do
+    # Uncomment the line below for your specific use case
+    # python3 runHeuristicIns.py $j & # Example with a Python script
+    python3 SMART_SINC_SINC+_v2_loop_german_v2.py $i $j 10 & # Running Python script with two arguments
+    # cust_func $j & # Example with a custom function
+  done
+  # Wait for all background processes started in the loop to complete before continuing
+#  wait
+done
+
 ## Put all cust_func in the background and bash
 ## would wait until those are completed
 ## before displaying all done message

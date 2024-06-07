@@ -661,6 +661,7 @@ for datafile in range(start_file, end_file + 1):
 
     #Name of input files
     file_name = 'Datfiles/DataFile' + str(datafile) + '.dat'
+    file_name = 'DatafilesNew/7-node-German-modified/Mesh/Mesh5Nodes6VNs/DataFile1.dat'
     #Number of virtual networks (VNs)
     num_vn = read_number_of_VNs(file_name)
 
