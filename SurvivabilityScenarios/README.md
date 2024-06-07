@@ -35,3 +35,14 @@ for i, j, k in nestedList:
 - Error in constructing the cycles: the code should consider that
   which edge to select among the multiple edges between the same
   node pair. This is captured in contractedLink3
+
+- Error in updating the new mapping in local search algorithm: 
+  we can update when AV_new > AV_old and TWC_new <= TWC_old
+  rather than only TWC_new = TWC_old
+
+- Error in deciding the failed links when checking the resiliency
+  under double-link failures: we need to check both directions of
+  the link
+
+- Error for settings of bounds of the ILP: the bound should be as 
+  as possible, since the TWC and AV has a very different weight
