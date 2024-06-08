@@ -1897,8 +1897,13 @@ if __name__ == '__main__':
             results_folder = "results/tokyo-5nodesVN-OneStep/"
             results_folder = results_folder + str(cur_num_vn) + "vn/" + str(cur_num_vl) + "vl/"
             # create the folder if it does not exist
-            if not os.path.exists(results_folder):
-                os.makedirs(results_folder)
+            # if not os.path.exists(results_folder):
+            #     os.makedirs(results_folder)
+            try:
+                if not os.path.exists(results_folder):
+                    os.makedirs(results_folder)
+            except Exception as e:
+                print(e)
             results_folder = results_folder + "scenario-" + str(scenario) + "_instance_" + str(datafile) + ".txt"
             with open(results_folder, 'w') as f:
                 line = str(cur_availability) + " " + str(totW) + " " + str(totNumVLwithSharing)
