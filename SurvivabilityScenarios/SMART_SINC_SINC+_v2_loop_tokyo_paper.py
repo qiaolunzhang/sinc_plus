@@ -825,6 +825,11 @@ if __name__ == '__main__':
         start_file = 1
         # end_file = start_file
         end_file = num_instances
+    elif len(sys.argv) == 5:
+        cur_num_vn = int(sys.argv[1])
+        cur_num_vl = int(sys.argv[2])
+        start_file = int(sys.argv[3])
+        end_file = int(sys.argv[4])
     else:
         cur_num_vn = 5
         cur_num_vl = 10
