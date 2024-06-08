@@ -1894,7 +1894,7 @@ if __name__ == '__main__':
 
             cur_availability = round(totAv / ((num_vn * numFail)) * 100, 2)
 
-            results_folder = "results/tokyo-5nodesVN/"
+            results_folder = "results/tokyo-5nodesVN-OneStep/"
             results_folder = results_folder + str(cur_num_vn) + "vn/" + str(cur_num_vl) + "vl/"
             # create the folder if it does not exist
             if not os.path.exists(results_folder):
