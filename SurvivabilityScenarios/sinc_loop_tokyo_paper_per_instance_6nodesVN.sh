@@ -66,7 +66,7 @@ for ((i=6; i<=30; i+=6)); do
     for ((k=1; k<=10; k+=1)); do
       # Uncomment the line below for your specific use case
       # python3 runHeuristicIns.py $j & # Example with a Python script
-      python3 sinc_loop_tokyo_paper_per_instance_6nodesVN.sh $i $j $k $k & # Running Python script with two arguments
+      python3 SMART_SINC_SINC+_v2_loop_tokyo_paper_6nodesVN.py $i $j $k $k & # Running Python script with two arguments
       # cust_func $j & # Example with a custom function
     done
   done
