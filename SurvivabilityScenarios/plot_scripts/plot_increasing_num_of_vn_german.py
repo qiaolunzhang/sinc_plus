@@ -79,15 +79,30 @@ def get_av_twc_shared_link(topology, num_of_vn_list, num_of_vl, num_instance):
 
 def plot_av_twc_shared_link(topology, num_of_vn_list, num_of_vl, num_instance):
     av_matrix, twc_matrix, shared_link_matrix = get_av_twc_shared_link(topology, num_of_vn_list, num_of_vl, num_instance)
-    pass
+    return av_matrix, twc_matrix, shared_link_matrix
 
 
 if __name__ == '__main__':
-    cur_topology = "tokyo"
-    # num_of_vn_list = [6, 12, 18, 24, 30]
-    cur_num_of_vn_list = [6, 12, 18, 24]
-    cur_num_of_vl = 6
     cur_num_instance = 10
-    plot_av_twc_shared_link(topology=cur_topology, num_of_vn_list=cur_num_of_vn_list, num_of_vl=cur_num_of_vl,
-                            num_instance=cur_num_instance)
 
+
+    cur_topology = "german-one-step"
+    cur_num_of_vn_list = [2, 3, 4, 5, 6]
+    cur_num_of_vl = 6
+    av_matrix_2, twc_matrix_2, shared_link_matrix_2 \
+        = plot_av_twc_shared_link(topology=cur_topology, num_of_vn_list=cur_num_of_vn_list, num_of_vl=cur_num_of_vl,
+                                  num_instance=cur_num_instance)
+
+    # cur_topology = "german-modified"
+    cur_topology = "german"
+    # num_of_vn_list = [6, 12, 18, 24, 30]
+    cur_num_of_vn_list = [2, 3, 4, 5, 6]
+    cur_num_of_vl = 6
+    av_matrix_1, twc_matrix_1, shared_link_matrix_1 \
+        = plot_av_twc_shared_link(topology=cur_topology, num_of_vn_list=cur_num_of_vn_list, num_of_vl=cur_num_of_vl,
+                                  num_instance=cur_num_instance)
+
+    print("av_matrix_1: ", av_matrix_1)
+    # print("twc_matrix_1: ", twc_matrix_1)
+    # print("shared_link_matrix_1: ", shared_link_matrix_1)
+    print("av_matrix_2: ", av_matrix_2)

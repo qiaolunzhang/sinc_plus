@@ -827,7 +827,7 @@ if __name__ == '__main__':
         end_file = num_instances
     else:
         cur_num_vn = 6
-        cur_num_vl = 15
+        cur_num_vl = 10
         num_instances = 6
         start_file = 6
         end_file = num_instances
@@ -875,14 +875,8 @@ if __name__ == '__main__':
             #Name of input files
             # file_name = 'Datfiles/DataFile' + str(datafile) + '.dat'
             # file_name = 'All_datafiles_used/Ring/2 VNs/DataFile' + str(datafile) + '.dat'
-            # file_name = 'DatafilesNew/tokyo/6vn/6vl/DataFile' + str(datafile) + '.dat'
-            if cur_num_vl == 6:
-                folder_name = 'DatafilesNew/7-node-German-modified/Ring/5Nodes' + str(cur_num_vn) + 'VNs/'
-                file_name = folder_name + 'DataFile' + str(datafile) + '.dat'
-            else:
-                folder_name = 'DatafilesNew/7-node-German-modified/Mesh/Mesh5Nodes' + str(cur_num_vn) + 'VNs/'
-                file_name = folder_name + 'DataFile' + str(datafile) + '.dat'
-            # file_name = 'DatafilesNew/tokyo/' + str(cur_num_vn) + 'vn/' + str(cur_num_vl) + 'vl/DataFile' + str(2) + '.dat'
+            # file_name = 'DatafilesNew/german-modified/6vn/6vl/DataFile' + str(datafile) + '.dat'
+            file_name = 'DatafilesNew/german-modified/' + str(cur_num_vn) + 'vn/' + str(cur_num_vl) + 'vl/DataFile' + str(datafile) + '.dat'
             # file_name = "previous_datafile/DataFile4" + ".dat"
             #Number of virtual networks (VNs)
             num_vn = read_number_of_VNs(file_name)
@@ -1781,9 +1775,9 @@ if __name__ == '__main__':
             print("Total availability:",totAv)
 
             # output the current mapping to a ample data file
-            file_name_initial_mapping = "initial_mapping_" + str(datafile) + ".txt"
-            file_name_initial_mapping = folder_name + file_name_initial_mapping
-            totMapsChecked = {}
+            # file_name_initial_mapping = "initial_mapping_" + str(datafile) + ".txt"
+            # file_name_initial_mapping = folder_name + file_name_initial_mapping
+            # totMapsChecked = {}
 
             # todo: the code to generate and check mapping
             # new_av_debug = get_availability_cutsets_total(totCut, totMaps)
@@ -1889,11 +1883,11 @@ if __name__ == '__main__':
 
             cur_availability = round(totAv / ((num_vn * numFail)) * 100, 2)
 
-            results_folder = "results/german/"
+            results_folder = "results/german-modified/"
             results_folder = results_folder + str(cur_num_vn) + "vn/" + str(cur_num_vl) + "vl/"
             # create the folder if it does not exist
             # if not os.path.exists(results_folder):
-                # os.makedirs(results_folder)
+            #     os.makedirs(results_folder)
             try:
                 if not os.path.exists(results_folder):
                     os.makedirs(results_folder)

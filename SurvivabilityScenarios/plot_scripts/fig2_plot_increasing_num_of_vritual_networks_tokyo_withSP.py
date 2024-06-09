@@ -29,10 +29,13 @@ def plot_settings(fig_width=3.487, fig_height=3.487/1.618):
     # plt.style.use(r"..\..\styles\infocom.mplstyle") # Insert your save location here
 
 
-def get_av_twc_shared_link(topology, num_of_vn_list, num_of_vl, num_instance):
-    num_scenarios = 5
-    scenario_list = ["scenario-1", "scenario-2", "scenario-3", "scenario-4", "scenario-7"]
-    scenario_legend_list = ["SVNM-MinTWC", "SVNM-MaxAv", "SINC-MinTWC", "SINC-MaxAv", "SINC+"]
+def get_av_twc_shared_link(topology, num_of_vn_list, num_of_vl, num_instance, scenario_list: list = None,
+                           scenario_legend_list: list = None):
+    if scenario_list is None:
+        scenario_list = ["scenario-1", "scenario-2", "scenario-3", "scenario-4", "scenario-7"]
+    if scenario_legend_list is None:
+        scenario_legend_list = ["SVNM-MinTWC", "SVNM-MaxAv", "SINC-MinTWC", "SINC-MaxAv", "SINC+"]
+    num_scenarios = len(scenario_list)
     av_matrix = [] # np.zeros(num_scenarios, len(num_of_vn_list))
     twc_matrix = [] # np.zeros(num_scenarios, len(num_of_vn_list))
     shared_link_matrix = [] # np.zeros(num_scenarios, len(num_of_vn_list))
@@ -77,17 +80,29 @@ def get_av_twc_shared_link(topology, num_of_vn_list, num_of_vl, num_instance):
     return av_matrix, twc_matrix, shared_link_matrix
 
 
-def plot_av_twc_shared_link(topology, num_of_vn_list, num_of_vl, num_instance):
-    av_matrix, twc_matrix, shared_link_matrix = get_av_twc_shared_link(topology, num_of_vn_list, num_of_vl, num_instance)
-    pass
-
-
 if __name__ == '__main__':
-    cur_topology = "tokyo"
+    cur_topology = "tokyo-5nodesVN"
     # num_of_vn_list = [6, 12, 18, 24, 30]
-    cur_num_of_vn_list = [6, 12, 18, 24]
+    cur_num_of_vn_list = [5, 10, 15, 20, 25]
     cur_num_of_vl = 6
     cur_num_instance = 10
-    plot_av_twc_shared_link(topology=cur_topology, num_of_vn_list=cur_num_of_vn_list, num_of_vl=cur_num_of_vl,
-                            num_instance=cur_num_instance)
+
+    scenario_list = ["scenario-1", "scenario-2", "scenario-3", "scenario-4", "scenario-7"]
+    scenario_legend_list = ["SVNM-MinTWC", "SVNM-MaxAv", "SINC-MinTWC", "SINC-MaxAv", "SINC+"]
+    av_matrix_survivable, twc_matrix_survivable, shared_link_matrix_survivable \
+        = get_av_twc_shared_link(topology=cur_topology, num_of_vn_list=cur_num_of_vn_list,
+                                 num_of_vl=cur_num_of_vl, num_instance=cur_num_instance, scenario_list=scenario_list,
+                                 scenario_legend_list=scenario_legend_list)
+
+    cur_topology = "tokyo-5nodesVN-SP"
+    scenario_list = ["scenario-0"]
+    scenario_legend_list = ["SP"]
+    av_matrix_SP, twc_matrix_SP, shared_link_matrix_SP \
+        = get_av_twc_shared_link(topology=cur_topology, num_of_vn_list=cur_num_of_vn_list,
+                                 num_of_vl=cur_num_of_vl, num_instance=cur_num_instance, scenario_list=scenario_list,
+                                 scenario_legend_list=scenario_legend_list)
+    av_matrix_combine = np.vstack((av_matrix_SP, av_matrix_survivable))
+
+    print("test")
+
 

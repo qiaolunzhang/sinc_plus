@@ -29,7 +29,7 @@ def plot_settings(fig_width=3.487, fig_height=3.487/1.618):
     # plt.style.use(r"..\..\styles\infocom.mplstyle") # Insert your save location here
 
 
-def get_av_twc_shared_link(topology, num_of_vn_list, num_of_vl, num_instance):
+def get_av_twc_shared_link(topology, num_of_vn, num_of_vl_list, num_instance):
     num_scenarios = 5
     scenario_list = ["scenario-1", "scenario-2", "scenario-3", "scenario-4", "scenario-7"]
     scenario_legend_list = ["SVNM-MinTWC", "SVNM-MaxAv", "SINC-MinTWC", "SINC-MaxAv", "SINC+"]
@@ -44,7 +44,7 @@ def get_av_twc_shared_link(topology, num_of_vn_list, num_of_vl, num_instance):
             cur_av_vector = []
             cur_twc_vector = []
             cur_shared_link_vector = []
-            for num_of_vn in num_of_vn_list:
+            for num_of_vl in num_of_vl_list:
                 file_name = "../results/" + topology + "/" + str(num_of_vn) + "vn/" + str(num_of_vl) + "vl/" + scenario_list[i] + "_instance_" + str(j) + ".txt"
                 with open(file_name, "r") as file:
                     lines = file.readlines()
@@ -77,8 +77,10 @@ def get_av_twc_shared_link(topology, num_of_vn_list, num_of_vl, num_instance):
     return av_matrix, twc_matrix, shared_link_matrix
 
 
-def plot_av_twc_shared_link(topology, num_of_vn_list, num_of_vl, num_instance):
-    av_matrix, twc_matrix, shared_link_matrix = get_av_twc_shared_link(topology, num_of_vn_list, num_of_vl, num_instance)
+def plot_av_twc_shared_link(topology, num_of_vn, num_of_vl_list, num_instance):
+    av_matrix, twc_matrix, shared_link_matrix = get_av_twc_shared_link(topology, num_of_vn, num_of_vl_list, num_instance)
+    # round av to only 2 decimal points
+    av_matrix = np.round(av_matrix, 2)
     # it is not meaningful to compare the availability of first and second scenarios under different number of
     # virtual networks
     pass
@@ -87,9 +89,9 @@ def plot_av_twc_shared_link(topology, num_of_vn_list, num_of_vl, num_instance):
 if __name__ == '__main__':
     cur_topology = "tokyo-5nodesVN"
     # num_of_vn_list = [6, 12, 18, 24, 30]
-    cur_num_of_vn_list = [5, 10, 15, 20, 25]
-    cur_num_of_vl = 10
+    cur_num_of_vn = 20 # [5, 10, 15, 20, 25]
+    cur_num_of_vl_list = [5, 6, 7, 8, 9, 10]
     cur_num_instance = 10
-    plot_av_twc_shared_link(topology=cur_topology, num_of_vn_list=cur_num_of_vn_list, num_of_vl=cur_num_of_vl,
+    plot_av_twc_shared_link(topology=cur_topology, num_of_vn=cur_num_of_vn,
+                            num_of_vl_list=cur_num_of_vl_list,
                             num_instance=cur_num_instance)
-

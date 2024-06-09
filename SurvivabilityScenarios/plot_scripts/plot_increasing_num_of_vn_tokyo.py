@@ -79,14 +79,16 @@ def get_av_twc_shared_link(topology, num_of_vn_list, num_of_vl, num_instance):
 
 def plot_av_twc_shared_link(topology, num_of_vn_list, num_of_vl, num_instance):
     av_matrix, twc_matrix, shared_link_matrix = get_av_twc_shared_link(topology, num_of_vn_list, num_of_vl, num_instance)
+    # it is not meaningful to compare the availability of first and second scenarios under different number of
+    # virtual networks
     pass
 
 
 if __name__ == '__main__':
-    cur_topology = "tokyo"
+    cur_topology = "tokyo-5nodesVN"
     # num_of_vn_list = [6, 12, 18, 24, 30]
-    cur_num_of_vn_list = [6, 12, 18, 24]
-    cur_num_of_vl = 6
+    cur_num_of_vn_list = [5, 10, 15, 20, 25]
+    cur_num_of_vl = 5
     cur_num_instance = 10
     plot_av_twc_shared_link(topology=cur_topology, num_of_vn_list=cur_num_of_vn_list, num_of_vl=cur_num_of_vl,
                             num_instance=cur_num_instance)

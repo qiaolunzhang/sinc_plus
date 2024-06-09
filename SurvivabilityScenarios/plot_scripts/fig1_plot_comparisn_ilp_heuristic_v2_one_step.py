@@ -95,7 +95,7 @@ def plot_av_twc_shared_link(topology, num_of_vn_list, num_of_vl, num_instance):
 
 
 if __name__ == '__main__':
-    cur_topology = "german"
+    cur_topology = "german-one-step"
     # num_of_vn_list = [6, 12, 18, 24, 30]
     cur_num_instance = 10
 
