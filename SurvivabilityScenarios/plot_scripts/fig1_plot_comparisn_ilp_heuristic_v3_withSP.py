@@ -242,7 +242,7 @@ def plot_av_twc_computation_time_sp(topology, av_matrix, twc_matrix, computation
     # round av to 1 decimal place
     av_matrix = np.round(av_matrix, 1)
 
-    # number of columns in each scenario
+    # number of columns in matrix (number of scenario)
     N = len(av_matrix[0])
     # number of scenarios
     ind = np.arange(4)
@@ -310,7 +310,7 @@ def plot_av_twc_computation_time_sp(topology, av_matrix, twc_matrix, computation
         handles = handles1 + handles2
         labels = labels1 + labels2
 
-        ax[0].legend(handles, labels, loc='upper right',  bbox_to_anchor=(3.0, 1.245),
+        ax[0].legend(handles, labels, loc='upper right',  bbox_to_anchor=(2.8, 1.245),
                      ncol=5, prop={'size': 7}, columnspacing=0.5)
     else:
         ax[0].legend(loc='upper right',  bbox_to_anchor=(3.1, 1.245),
@@ -417,9 +417,9 @@ def plot_av_twc_computation_time_sp(topology, av_matrix, twc_matrix, computation
         ax[0].add_patch(arrow_style)
 
     if double_axis_flag:
-        fig.savefig('figures/' + topology + '/compare_ILP_heuristic_double_axis_sp.pdf')
+        fig.savefig('figures/' + topology + '/fig1_compare_ILP_heuristic_double_axis_sp.pdf')
     else:
-        fig.savefig('figures/' + topology + '/compare_ILP_heuristic_one_axis_sp.pdf')
+        fig.savefig('figures/' + topology + '/fig1_compare_ILP_heuristic_one_axis_sp.pdf')
 
 
 if __name__ == '__main__':
