@@ -1992,7 +1992,10 @@ if __name__ == '__main__':
             results_folder = results_folder + "scenario-" + str(scenario) + "_instance_" + str(datafile) + ".txt"
             with open(results_folder, 'w') as f:
                 line = str(cur_availability) + " " + str(totW) + " " + str(totNumVLwithSharing)
-                line = line + " " + str(averageNumVLwithSharing) + " " + str(time_elapsed) + "\n"
+                line = line + " " + str(averageNumVLwithSharing) + " " + str(time_elapsed)
+                line = line + " " + str(totalCapacityOneOne) + " " + str(totalCapacityOneThree) + " " + str(totalCapacityOneFive)
+                line = line + " " + str(maxCapacityOneOne) + " " + str(maxCapacityOneThree) + " " + str(maxCapacityOneFive)
+                line = line + "\n"
                 f.write(line)
 
         mean_av = sum_av / num_datafile
