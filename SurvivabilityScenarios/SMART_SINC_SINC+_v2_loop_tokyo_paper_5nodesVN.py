@@ -857,6 +857,8 @@ if __name__ == '__main__':
 
     #To start the clock
 
+    virtualLinkRequirementOneFiveDic = {}
+    virtualLinkRequirementOneThreeDic = {}
     for scenario in [1, 2, 3, 4, 7]:
         #For each data file
         for datafile in range(start_file, end_file + 1):
@@ -904,6 +906,21 @@ if __name__ == '__main__':
                 # todo: check if the start_key can be used to identify the sharing of the virtual link
                 start_key = CB.number_of_edges()
                 read_logical_topology(vn, start_key, file_name, vn_index=vn)
+
+                if scenario == 1:
+                    for edge in L.edges:
+                        # cur_capacity = random int between 1 and 5
+                        cur_capacity = random.randint(1, 5)
+                        if edge[0] < edge[1]:
+                            virtualLinkRequirementOneFiveDic[datafile, vn, edge[0], edge[1]] = cur_capacity
+                        else:
+                            virtualLinkRequirementOneFiveDic[datafile, vn, edge[1], edge[0]] = cur_capacity
+
+                        cur_capacity = random.randint(1, 3)
+                        if edge[0] < edge[1]:
+                            virtualLinkRequirementOneThreeDic[datafile, vn, edge[0], edge[1]] = cur_capacity
+                        else:
+                            virtualLinkRequirementOneThreeDic[datafile, vn, edge[1], edge[0]] = cur_capacity
 
                 nodeTotal = nx.number_of_nodes(L)
 
@@ -1835,6 +1852,10 @@ if __name__ == '__main__':
             if (scenario == 3 or scenario == 4):
                 totAv, totNumVLwithSharing, averageNumVLwithSharing = get_availability_gateways(totMaps)
 
+            physicalEdgeOccupiedCapacityOneOneDic = {}
+            physicalEdgeOccupiedCapacityOneThreeDic = {}
+            physicalEdgeOccupiedCapacityOneFiveDic = {}
+
             if (scenario == 7):
                 shMaps = {}
                 #Compute the availability considering inter-VN capacity sharing and spare slice sharing
@@ -1862,6 +1883,76 @@ if __name__ == '__main__':
                 #Total wave consumption = wavelengths used to map virtual links of the VNs + wavelengths used to map spare slice virtual links
                 totW = totW + (totW_sh * 2)
 
+                for node_pair in shMaps:
+                    path_list = shMaps[node_pair]
+                    for path in path_list:
+                        for link in path:
+                            if (link[0], link[1]) not in physicalEdgeOccupiedCapacityOneOneDic.keys():
+                                physicalEdgeOccupiedCapacityOneOneDic[link[0], link[1]] = 1
+                                physicalEdgeOccupiedCapacityOneOneDic[link[1], link[0]] = 1
+                                physicalEdgeOccupiedCapacityOneThreeDic[link[0], link[1]] = 1
+                                physicalEdgeOccupiedCapacityOneThreeDic[link[1], link[0]] = 1
+                                physicalEdgeOccupiedCapacityOneFiveDic[link[0], link[1]] = 1
+                                physicalEdgeOccupiedCapacityOneFiveDic[link[1], link[0]] = 1
+                            else:
+                                physicalEdgeOccupiedCapacityOneOneDic[link[0], link[1]] += 1
+                                physicalEdgeOccupiedCapacityOneOneDic[link[1], link[0]] += 1
+                                physicalEdgeOccupiedCapacityOneThreeDic[link[0], link[1]] += 1
+                                physicalEdgeOccupiedCapacityOneThreeDic[link[1], link[0]] += 1
+                                physicalEdgeOccupiedCapacityOneFiveDic[link[0], link[1]] += 1
+                                physicalEdgeOccupiedCapacityOneFiveDic[link[1], link[0]] += 1
+
+            for cur_virtual_link in totMaps.keys():
+                cur_path_physical_link_list = totMaps[cur_virtual_link]
+                for cur_path_physical_link in cur_path_physical_link_list:
+                    if cur_virtual_link[1] < cur_virtual_link[2]:
+                        cur_path_required_capacityOneThree \
+                            = virtualLinkRequirementOneThreeDic[
+                            datafile, cur_virtual_link[0], cur_virtual_link[1], cur_virtual_link[2]]
+                        cur_path_required_capacityOneFive \
+                            = virtualLinkRequirementOneFiveDic[
+                            datafile, cur_virtual_link[0], cur_virtual_link[1], cur_virtual_link[2]]
+                    else:
+                        cur_path_required_capacityOneThree \
+                            = virtualLinkRequirementOneThreeDic[
+                            datafile, cur_virtual_link[0], cur_virtual_link[1], cur_virtual_link[2]]
+                        cur_path_required_capacityOneFive \
+                            = virtualLinkRequirementOneFiveDic[
+                            datafile, cur_virtual_link[0], cur_virtual_link[1], cur_virtual_link[2]]
+                    # try:
+                    if (cur_path_physical_link[0],
+                        cur_path_physical_link[1]) not in physicalEdgeOccupiedCapacityOneThreeDic.keys():
+                        physicalEdgeOccupiedCapacityOneOneDic[cur_path_physical_link[0], cur_path_physical_link[1]] = 1
+                        physicalEdgeOccupiedCapacityOneOneDic[cur_path_physical_link[1], cur_path_physical_link[0]] = 1
+                        physicalEdgeOccupiedCapacityOneThreeDic[
+                            cur_path_physical_link[0], cur_path_physical_link[1]] = cur_path_required_capacityOneThree
+                        physicalEdgeOccupiedCapacityOneThreeDic[
+                            cur_path_physical_link[1], cur_path_physical_link[0]] = cur_path_required_capacityOneThree
+                        physicalEdgeOccupiedCapacityOneFiveDic[
+                            cur_path_physical_link[0], cur_path_physical_link[1]] = cur_path_required_capacityOneFive
+                        physicalEdgeOccupiedCapacityOneFiveDic[
+                            cur_path_physical_link[1], cur_path_physical_link[0]] = cur_path_required_capacityOneFive
+                    else:
+                        physicalEdgeOccupiedCapacityOneOneDic[cur_path_physical_link[0], cur_path_physical_link[1]] += 1
+                        physicalEdgeOccupiedCapacityOneOneDic[cur_path_physical_link[1], cur_path_physical_link[0]] += 1
+                        physicalEdgeOccupiedCapacityOneThreeDic[
+                            cur_path_physical_link[0], cur_path_physical_link[1]] += cur_path_required_capacityOneThree
+                        physicalEdgeOccupiedCapacityOneThreeDic[
+                            cur_path_physical_link[1], cur_path_physical_link[0]] += cur_path_required_capacityOneThree
+                        physicalEdgeOccupiedCapacityOneFiveDic[
+                            cur_path_physical_link[0], cur_path_physical_link[1]] += cur_path_required_capacityOneFive
+                        physicalEdgeOccupiedCapacityOneFiveDic[
+                            cur_path_physical_link[1], cur_path_physical_link[0]] += cur_path_required_capacityOneFive
+                    # except Exception as e:
+                    #     print(e)
+
+            totalCapacityOneOne = sum(physicalEdgeOccupiedCapacityOneOneDic.values()) / 2
+            totalCapacityOneThree = sum(physicalEdgeOccupiedCapacityOneThreeDic.values()) / 2
+            totalCapacityOneFive = sum(physicalEdgeOccupiedCapacityOneFiveDic.values()) / 2
+            maxCapacityOneOne = max(physicalEdgeOccupiedCapacityOneOneDic.values())
+            maxCapacityOneThree = max(physicalEdgeOccupiedCapacityOneThreeDic.values())
+            maxCapacityOneFive = max(physicalEdgeOccupiedCapacityOneFiveDic.values())
+
             print("\n############# DATAFILE", datafile, "###############")
             print("Total availability:", totAv)
             print("Total wavelength consumption:", totW)
@@ -1888,7 +1979,7 @@ if __name__ == '__main__':
 
             cur_availability = round(totAv / ((num_vn * numFail)) * 100, 2)
 
-            results_folder = "results/tokyo-5nodesVN/"
+            results_folder = "results/tokyo-5nodesVN-Capacity/"
             results_folder = results_folder + str(cur_num_vn) + "vn/" + str(cur_num_vl) + "vl/"
             # create the folder if it does not exist
             # if not os.path.exists(results_folder):
