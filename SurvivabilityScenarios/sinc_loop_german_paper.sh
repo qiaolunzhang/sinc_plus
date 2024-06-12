@@ -61,8 +61,8 @@
 # Loop from 1 to 100 in steps of 10
 # Loop over number of virtual of networks
 for ((i=2; i<=6; i+=1)); do
-  # Loop over the nubmer of virtual links
-  for ((j=5; j<=10; j+=1)); do
+  # Loop over the number of virtual links
+  for ((j=6; j<=15; j+=9)); do
     # Uncomment the line below for your specific use case
     # python3 runHeuristicIns.py $j & # Example with a Python script
     # Launch a batch of 10 instances in parallel
