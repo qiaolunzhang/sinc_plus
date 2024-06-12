@@ -62,10 +62,12 @@
 for ((i=2; i<=6; i+=1)); do
   # Launch a batch of 10 instances in parallel
   for ((j=6; j<=15; j+=9)); do
-    # Uncomment the line below for your specific use case
-    # python3 runHeuristicIns.py $j & # Example with a Python script
-    python3 SMART_SINC_SINC+_v2_loop_german_paper_shortest_path.py $i $j 10 & # Running Python script with two arguments
-    # cust_func $j & # Example with a custom function
+    for ((k=1; k<=10; k+=1)); do
+      # Uncomment the line below for your specific use case
+      # python3 runHeuristicIns.py $j & # Example with a Python script
+      python3 SMART_SINC_SINC+_v2_loop_german_paper_shortest_path.py $i $j $k $k & # Running Python script with two arguments
+      # cust_func $j & # Example with a custom function
+    done
   done
   # Wait for all background processes started in the loop to complete before continuing
 #  wait
