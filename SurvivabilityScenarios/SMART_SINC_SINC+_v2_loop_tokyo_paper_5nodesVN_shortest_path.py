@@ -1,5 +1,6 @@
 # SMART ALGORITHM FOR SURVIVABILITY
 import copy
+import pickle
 
 import networkx as nx
 import random
@@ -751,7 +752,8 @@ if __name__ == '__main__':
     scenario = 4
 
     #To start the clock
-
+    virtualLinkRequirementOneFiveDic = {}
+    virtualLinkRequirementOneThreeDic = {}
     for scenario in [0]:
         #For each data file
         for datafile in range(start_file, end_file + 1):
@@ -791,6 +793,17 @@ if __name__ == '__main__':
             # todo: check if we find the routing of each VN separately without considering the other VNs
             vn_Maps_dic = {}
             vn_CutSets_dic = {}
+            requests_folder = "requests/tokyo-5nodesVN-Capacity/"
+            requests_folder = requests_folder + str(cur_num_vn) + "vn/" + str(cur_num_vl) + "vl/"
+            # create the folder if it does not exist
+            # if not os.path.exists(results_folder):
+            # os.makedirs(results_folder)
+            requests_file = requests_folder + "instance_" + str(datafile) + "_OneFive.obj"
+            with open(requests_file, 'rb') as f:
+                virtualLinkRequirementOneFiveDic = pickle.load(f)
+            requests_file = requests_folder + "instance_" + str(datafile) + "_OneThree.obj"
+            with open(requests_file, 'rb') as f:
+                virtualLinkRequirementOneThreeDic = pickle.load(f)
             for vn in range(1, num_vn + 1):
 
                 # L represents the logical network
@@ -977,12 +990,53 @@ if __name__ == '__main__':
             #Bidirectional links
             totW = numWave * 2
 
+            physicalEdgeOccupiedCapacityOneOneDic = {}
+            physicalEdgeOccupiedCapacityOneThreeDic = {}
+            physicalEdgeOccupiedCapacityOneFiveDic = {}
+            for cur_virtual_link in totMaps.keys():
+                cur_path_physical_link_list = totMaps[cur_virtual_link]
+                for cur_path_physical_link in cur_path_physical_link_list:
+                    if cur_virtual_link[1] < cur_virtual_link[2]:
+                        cur_path_required_capacityOneThree \
+                            = virtualLinkRequirementOneThreeDic[datafile, cur_virtual_link[0], cur_virtual_link[1], cur_virtual_link[2]]
+                        cur_path_required_capacityOneFive \
+                            = virtualLinkRequirementOneFiveDic[datafile, cur_virtual_link[0], cur_virtual_link[1], cur_virtual_link[2]]
+                    else:
+                        cur_path_required_capacityOneThree \
+                            = virtualLinkRequirementOneThreeDic[datafile, cur_virtual_link[0], cur_virtual_link[1], cur_virtual_link[2]]
+                        cur_path_required_capacityOneFive \
+                            = virtualLinkRequirementOneFiveDic[datafile, cur_virtual_link[0], cur_virtual_link[1], cur_virtual_link[2]]
+                    # try:
+                    if (cur_path_physical_link[0], cur_path_physical_link[1]) not in physicalEdgeOccupiedCapacityOneThreeDic.keys():
+                        physicalEdgeOccupiedCapacityOneOneDic[cur_path_physical_link[0], cur_path_physical_link[1]] = 1
+                        physicalEdgeOccupiedCapacityOneOneDic[cur_path_physical_link[1], cur_path_physical_link[0]] = 1
+                        physicalEdgeOccupiedCapacityOneThreeDic[cur_path_physical_link[0], cur_path_physical_link[1]] = cur_path_required_capacityOneThree
+                        physicalEdgeOccupiedCapacityOneThreeDic[cur_path_physical_link[1], cur_path_physical_link[0]] = cur_path_required_capacityOneThree
+                        physicalEdgeOccupiedCapacityOneFiveDic[cur_path_physical_link[0], cur_path_physical_link[1]] = cur_path_required_capacityOneFive
+                        physicalEdgeOccupiedCapacityOneFiveDic[cur_path_physical_link[1], cur_path_physical_link[0]] = cur_path_required_capacityOneFive
+                    else:
+                        physicalEdgeOccupiedCapacityOneOneDic[cur_path_physical_link[0], cur_path_physical_link[1]] += 1
+                        physicalEdgeOccupiedCapacityOneOneDic[cur_path_physical_link[1], cur_path_physical_link[0]] += 1
+                        physicalEdgeOccupiedCapacityOneThreeDic[cur_path_physical_link[0], cur_path_physical_link[1]] += cur_path_required_capacityOneThree
+                        physicalEdgeOccupiedCapacityOneThreeDic[cur_path_physical_link[1], cur_path_physical_link[0]] += cur_path_required_capacityOneThree
+                        physicalEdgeOccupiedCapacityOneFiveDic[cur_path_physical_link[0], cur_path_physical_link[1]] += cur_path_required_capacityOneFive
+                        physicalEdgeOccupiedCapacityOneFiveDic[cur_path_physical_link[1], cur_path_physical_link[0]] += cur_path_required_capacityOneFive
+                    # except Exception as e:
+                    #     print(e)
+
+            totalCapacityOneOne = sum(physicalEdgeOccupiedCapacityOneOneDic.values()) / 2
+            totalCapacityOneThree = sum(physicalEdgeOccupiedCapacityOneThreeDic.values()) / 2
+            totalCapacityOneFive = sum(physicalEdgeOccupiedCapacityOneFiveDic.values()) / 2
+            maxCapacityOneOne = max(physicalEdgeOccupiedCapacityOneOneDic.values())
+            maxCapacityOneThree = max(physicalEdgeOccupiedCapacityOneThreeDic.values())
+            maxCapacityOneFive = max(physicalEdgeOccupiedCapacityOneFiveDic.values())
+
             cur_availability = round(totAv / ((num_vn * numFail)) * 100, 2)
 
             totNumVLwithSharing = 0
             averageNumVLwithSharing = 0
 
-            results_folder = "results/tokyo-5nodesVN-SP/"
+            results_folder = "results/tokyo-5nodesVN-SP-Capacity/"
             results_folder = results_folder + str(cur_num_vn) + "vn/" + str(cur_num_vl) + "vl/"
             # create the folder if it does not exist
             try:
@@ -993,7 +1047,11 @@ if __name__ == '__main__':
             results_folder = results_folder + "scenario-" + str(scenario) + "_instance_" + str(datafile) + ".txt"
             with open(results_folder, 'w') as f:
                 line = str(cur_availability) + " " + str(totW) + " " + str(totNumVLwithSharing)
-                line = line + " " + str(averageNumVLwithSharing) + " " + str(time_elapsed) + "\n"
+                # line = line + " " + str(averageNumVLwithSharing) + " " + str(time_elapsed) + "\n"
+                line = line + " " + str(averageNumVLwithSharing) + " " + str(time_elapsed)
+                line = line + " " + str(totalCapacityOneOne) + " " + str(totalCapacityOneThree) + " " + str(totalCapacityOneFive)
+                line = line + " " + str(maxCapacityOneOne) + " " + str(maxCapacityOneThree) + " " + str(maxCapacityOneFive)
+                line = line + "\n"
                 f.write(line)
 
         mean_av = sum_av / num_datafile

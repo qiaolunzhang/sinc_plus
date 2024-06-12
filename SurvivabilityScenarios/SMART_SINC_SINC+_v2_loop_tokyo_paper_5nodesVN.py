@@ -1,5 +1,6 @@
 # SMART ALGORITHM FOR SURVIVABILITY
 import copy
+import pickle
 
 import networkx as nx
 import random
@@ -1957,6 +1958,24 @@ if __name__ == '__main__':
             print("Total availability:", totAv)
             print("Total wavelength consumption:", totW)
             print("TotMaps:", totMaps)
+
+            if scenario == 1:
+                requests_folder = "requests/tokyo-5nodesVN-Capacity/"
+                requests_folder = requests_folder + str(cur_num_vn) + "vn/" + str(cur_num_vl) + "vl/"
+                # create the folder if it does not exist
+                # if not os.path.exists(results_folder):
+                # os.makedirs(results_folder)
+                try:
+                    if not os.path.exists(requests_folder):
+                        os.makedirs(requests_folder)
+                except Exception as e:
+                    print(e)
+                requests_file = requests_folder + "instance_" + str(datafile) + "_OneFive.obj"
+                with open(requests_file, 'wb') as f:
+                    pickle.dump(virtualLinkRequirementOneFiveDic, f)
+                requests_file = requests_folder + "instance_" + str(datafile) + "_OneThree.obj"
+                with open(requests_file, 'wb') as f:
+                    pickle.dump(virtualLinkRequirementOneThreeDic, f)
 
             sum_av += totAv
             sum_wave += totW
