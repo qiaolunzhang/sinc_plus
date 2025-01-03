@@ -686,7 +686,6 @@ def get_availability_gateways_shared_slice(totMaps, shMaps):
 def stimulated_annealing(totMaps, link, totCut, totAv, wave, scenario, no_increasing_wave_flag=True):
     temperature = 10
 
-    cur_num_mapped_links = len(totMaps[link])
     n_iterations = len(totMaps[link])
 
     newMapBest = totMaps.copy()
@@ -700,6 +699,7 @@ def stimulated_annealing(totMaps, link, totCut, totAv, wave, scenario, no_increa
         # Decrease temperature
         t = temperature / float(i + 1)
 
+        cur_num_mapped_links = len(totMaps[link])
         neighbor_step = random.randint(1, cur_num_mapped_links)
         # set the weight of the links
         P2 = P.copy()
@@ -1893,7 +1893,8 @@ if __name__ == '__main__':
                     if (link[0] == vn):
                         #print("Trying with vn and link:", vn, link)
                         #Map a single virtual link of a VN in a different way to see if a neighbour solution gets a greater availability value
-                        totAv = different_mapping(totMaps, link, totCut, totAv, totW, scenario)
+                        # totAv = different_mapping(totMaps, link, totCut, totAv, totW, scenario)
+                        totAv = stimulated_annealing(totMaps, link, totCut, totAv, totW, scenario)
                 for link in totMaps:
                     # Consider only virtual links of the VN selected
                     if (link[0] == vn):
@@ -1901,7 +1902,8 @@ if __name__ == '__main__':
                         # Map a single virtual link of a VN in a different way to see if a neighbour solution gets a greater availability value
                         # try to further increase availability
                         if scenario == 2 or scenario == 4:
-                            totAv = different_mapping(totMaps, link, totCut, totAv, totW, scenario, no_increasing_wave_flag=False)
+                            # totAv = different_mapping(totMaps, link, totCut, totAv, totW, scenario, no_increasing_wave_flag=False)
+                            totAv = stimulated_annealing(totMaps, link, totCut, totAv, totW, scenario, no_increasing_wave_flag=False)
 
             print("\n\n########## LOCAL SEARCH RESULTS #########\n\n")
             print("Previous mapping:",backMaps)
@@ -2110,7 +2112,8 @@ if __name__ == '__main__':
 
             cur_availability = round(totAv / ((num_vn * numFail)) * 100, 2)
 
-            results_folder = "results/tokyo-5nodesVN-Capacity/"
+            # results for stimulated annealing
+            results_folder = "results/tokyo-5nodesVN-Capacity-SA/"
             results_folder = results_folder + str(cur_num_vn) + "vn/" + str(cur_num_vl) + "vl/"
             # create the folder if it does not exist
             # if not os.path.exists(results_folder):

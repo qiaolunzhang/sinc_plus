@@ -1,6 +1,5 @@
 # SMART ALGORITHM FOR SURVIVABILITY
 import copy
-import pickle
 
 import networkx as nx
 import random
@@ -10,7 +9,6 @@ import time as time
 import numpy as np
 import sys
 import os
-import math
 
 
 # Function to read the number of virtual networks that is a value present in the data file
@@ -683,116 +681,6 @@ def get_availability_gateways_shared_slice(totMaps, shMaps):
 
     return totAvGw, totNumVLwithSharing, averageNumVLwithSharing
 
-def stimulated_annealing(totMaps, link, totCut, totAv, wave, scenario, no_increasing_wave_flag=True):
-    temperature = 10
-
-    cur_num_mapped_links = len(totMaps[link])
-    n_iterations = len(totMaps[link])
-
-    newMapBest = totMaps.copy()
-    best_eval_AV = totAv
-    # Compute number of wavelengths used for the mapping of the new link
-    best_eval_numWave = 0
-    for l in totMaps[link]:
-        best_eval_numWave += 1
-
-    for i in range(n_iterations):
-        # Decrease temperature
-        t = temperature / float(i + 1)
-
-        neighbor_step = random.randint(1, cur_num_mapped_links)
-        # set the weight of the links
-        P2 = P.copy()
-        # for plink in totMaps[link]:
-        for plink_index in range(neighbor_step):
-            plink = totMaps[link][plink_index]
-            P2 = P.copy()
-            mapping = []
-
-            # if(trials==0):
-            # print("Link",plink)
-            # Increment the weight of each physical link (once at time) already used to allow to find a disjoint mapping
-            P2[plink[0]][plink[1]]['weight'] += 10
-        sp = nx.shortest_path(P2, source=link[1], target=link[2],
-                              weight='weight')
-        sp_links = []
-        for jP in range(len(sp)):
-            if jP < len(sp) - 1:
-                sp_links.append((sp[jP], sp[jP + 1]))
-                linksUsedInMapping.append((sp[jP], sp[jP + 1]))
-        mapping.append(sp_links)
-        # print("Mapping:",mapping[0])
-
-        newMap = totMaps.copy()
-        newMap[link] = mapping[0]
-
-        # Verify if the new mapping is survivable
-        surv = verify_survivability(newMap, totCut)
-        if (surv == True):
-            # print("SURVIVABLE MAPPING")
-            # print("Link",link,"mapped on new path",mapping)
-
-            # Compute the new availability value
-            new_av = get_availability_cutsets_total(totCut, newMap)
-            # print("Availability of the new mapping:",new_av)
-
-            # python random.random() function returns a random float number between 0.0 to 1.0
-            stimulated_accept_flag = False
-            if  random.random() < math.exp((totAv - new_av) / t):
-                stimulated_accept_flag = True
-
-            if (new_av > totAv) or stimulated_accept_flag:
-                print("Availability improved, new mapping saved")
-                # Compute number of wavelengths used for the mapping of the new link
-                numWaveNew = 0
-                numWave = 0
-                for l in newMap[link]:
-                    numWaveNew += 1
-                for l in totMaps[link]:
-                    numWave += 1
-
-                if (scenario == 2 or scenario == 4):
-                    print("Availability improved, new mapping saved")
-                    if no_increasing_wave_flag:
-                        if (numWaveNew * 2 <= numWave * 2) or stimulated_accept_flag:
-                            totMaps[link] = newMap[link]
-                            totAv = new_av
-
-                            if new_av > best_eval_AV and numWaveNew <= best_eval_numWave:
-                                newMapBest[link] = newMap[link]
-                                best_eval_AV = new_av
-                                best_eval_numWave = numWaveNew
-                    else:
-                        totMaps[link] = newMap[link]
-                        totAv = new_av
-
-                        if new_av > best_eval_AV:
-                            newMapBest[link] = newMap[link]
-                            best_eval_AV = new_av
-                            best_eval_numWave = numWaveNew
-                else:
-                    # scenario 1 or 3
-                    # If wavelengths consumption is smaller or equal than before, then save the new mapping
-                    if (numWaveNew * 2 <= numWave * 2) or stimulated_accept_flag:
-                        print("Availability improved, new mapping saved")
-                        totMaps[link] = newMap[link]
-                        totAv = new_av
-
-                    if new_av > best_eval_AV and numWaveNew <= best_eval_numWave:
-                        newMapBest[link] = newMap[link]
-                        best_eval_AV = new_av
-                        best_eval_numWave = numWaveNew
-            else:
-                # print("New availability value is not an improving one, mapping discarded")
-                for l in mapping[0]:
-                    P2[l[0]][l[1]]['weight'] += 1
-        # else:
-        #    print("New mapping not survivable")
-    totAv = best_eval_AV
-    totMaps[link] = newMapBest[link]
-
-    return totAv
-
 
 # Function that tries to map a virtual link of a VN over a different path on the physical network
 # (different means that at least a physical link must differs w.r.t. initial mapping)
@@ -937,13 +825,8 @@ if __name__ == '__main__':
         start_file = 1
         # end_file = start_file
         end_file = num_instances
-    elif len(sys.argv) == 5:
-        cur_num_vn = int(sys.argv[1])
-        cur_num_vl = int(sys.argv[2])
-        start_file = int(sys.argv[3])
-        end_file = int(sys.argv[4])
     else:
-        cur_num_vn = 5
+        cur_num_vn = 6
         cur_num_vl = 10
         num_instances = 6
         start_file = 6
@@ -969,8 +852,6 @@ if __name__ == '__main__':
 
     #To start the clock
 
-    virtualLinkRequirementOneFiveDic = {}
-    virtualLinkRequirementOneThreeDic = {}
     for scenario in [1, 2, 3, 4, 7]:
         #For each data file
         for datafile in range(start_file, end_file + 1):
@@ -995,7 +876,7 @@ if __name__ == '__main__':
             # file_name = 'Datfiles/DataFile' + str(datafile) + '.dat'
             # file_name = 'All_datafiles_used/Ring/2 VNs/DataFile' + str(datafile) + '.dat'
             # file_name = 'DatafilesNew/german-modified/6vn/6vl/DataFile' + str(datafile) + '.dat'
-            file_name = 'DatafilesNew/tokyo-5nodes/' + str(cur_num_vn) + 'vn/' + str(cur_num_vl) + 'vl/DataFile' + str(datafile) + '.dat'
+            file_name = 'DatafilesNew/german-modified/' + str(cur_num_vn) + 'vn/' + str(cur_num_vl) + 'vl/DataFile' + str(datafile) + '.dat'
             # file_name = "previous_datafile/DataFile4" + ".dat"
             #Number of virtual networks (VNs)
             num_vn = read_number_of_VNs(file_name)
@@ -1018,21 +899,6 @@ if __name__ == '__main__':
                 # todo: check if the start_key can be used to identify the sharing of the virtual link
                 start_key = CB.number_of_edges()
                 read_logical_topology(vn, start_key, file_name, vn_index=vn)
-
-                if scenario == 1:
-                    for edge in L.edges:
-                        # cur_capacity = random int between 1 and 5
-                        cur_capacity = random.randint(1, 5)
-                        if edge[0] < edge[1]:
-                            virtualLinkRequirementOneFiveDic[datafile, vn, edge[0], edge[1]] = cur_capacity
-                        else:
-                            virtualLinkRequirementOneFiveDic[datafile, vn, edge[1], edge[0]] = cur_capacity
-
-                        cur_capacity = random.randint(1, 3)
-                        if edge[0] < edge[1]:
-                            virtualLinkRequirementOneThreeDic[datafile, vn, edge[0], edge[1]] = cur_capacity
-                        else:
-                            virtualLinkRequirementOneThreeDic[datafile, vn, edge[1], edge[0]] = cur_capacity
 
                 nodeTotal = nx.number_of_nodes(L)
 
@@ -1899,7 +1765,6 @@ if __name__ == '__main__':
                     if (link[0] == vn):
                         # print("Trying with vn and link:", vn, link)
                         # Map a single virtual link of a VN in a different way to see if a neighbour solution gets a greater availability value
-                        # try to further increase availability
                         if scenario == 2 or scenario == 4:
                             totAv = different_mapping(totMaps, link, totCut, totAv, totW, scenario, no_increasing_wave_flag=False)
 
@@ -1965,10 +1830,6 @@ if __name__ == '__main__':
             if (scenario == 3 or scenario == 4):
                 totAv, totNumVLwithSharing, averageNumVLwithSharing = get_availability_gateways(totMaps)
 
-            physicalEdgeOccupiedCapacityOneOneDic = {}
-            physicalEdgeOccupiedCapacityOneThreeDic = {}
-            physicalEdgeOccupiedCapacityOneFiveDic = {}
-
             if (scenario == 7):
                 shMaps = {}
                 #Compute the availability considering inter-VN capacity sharing and spare slice sharing
@@ -1996,98 +1857,10 @@ if __name__ == '__main__':
                 #Total wave consumption = wavelengths used to map virtual links of the VNs + wavelengths used to map spare slice virtual links
                 totW = totW + (totW_sh * 2)
 
-                for node_pair in shMaps:
-                    path_list = shMaps[node_pair]
-                    for path in path_list:
-                        for link in path:
-                            if (link[0], link[1]) not in physicalEdgeOccupiedCapacityOneOneDic.keys():
-                                physicalEdgeOccupiedCapacityOneOneDic[link[0], link[1]] = 1
-                                physicalEdgeOccupiedCapacityOneOneDic[link[1], link[0]] = 1
-                                physicalEdgeOccupiedCapacityOneThreeDic[link[0], link[1]] = 1
-                                physicalEdgeOccupiedCapacityOneThreeDic[link[1], link[0]] = 1
-                                physicalEdgeOccupiedCapacityOneFiveDic[link[0], link[1]] = 1
-                                physicalEdgeOccupiedCapacityOneFiveDic[link[1], link[0]] = 1
-                            else:
-                                physicalEdgeOccupiedCapacityOneOneDic[link[0], link[1]] += 1
-                                physicalEdgeOccupiedCapacityOneOneDic[link[1], link[0]] += 1
-                                physicalEdgeOccupiedCapacityOneThreeDic[link[0], link[1]] += 1
-                                physicalEdgeOccupiedCapacityOneThreeDic[link[1], link[0]] += 1
-                                physicalEdgeOccupiedCapacityOneFiveDic[link[0], link[1]] += 1
-                                physicalEdgeOccupiedCapacityOneFiveDic[link[1], link[0]] += 1
-
-            for cur_virtual_link in totMaps.keys():
-                cur_path_physical_link_list = totMaps[cur_virtual_link]
-                for cur_path_physical_link in cur_path_physical_link_list:
-                    if cur_virtual_link[1] < cur_virtual_link[2]:
-                        cur_path_required_capacityOneThree \
-                            = virtualLinkRequirementOneThreeDic[
-                            datafile, cur_virtual_link[0], cur_virtual_link[1], cur_virtual_link[2]]
-                        cur_path_required_capacityOneFive \
-                            = virtualLinkRequirementOneFiveDic[
-                            datafile, cur_virtual_link[0], cur_virtual_link[1], cur_virtual_link[2]]
-                    else:
-                        cur_path_required_capacityOneThree \
-                            = virtualLinkRequirementOneThreeDic[
-                            datafile, cur_virtual_link[0], cur_virtual_link[1], cur_virtual_link[2]]
-                        cur_path_required_capacityOneFive \
-                            = virtualLinkRequirementOneFiveDic[
-                            datafile, cur_virtual_link[0], cur_virtual_link[1], cur_virtual_link[2]]
-                    # try:
-                    if (cur_path_physical_link[0],
-                        cur_path_physical_link[1]) not in physicalEdgeOccupiedCapacityOneThreeDic.keys():
-                        physicalEdgeOccupiedCapacityOneOneDic[cur_path_physical_link[0], cur_path_physical_link[1]] = 1
-                        physicalEdgeOccupiedCapacityOneOneDic[cur_path_physical_link[1], cur_path_physical_link[0]] = 1
-                        physicalEdgeOccupiedCapacityOneThreeDic[
-                            cur_path_physical_link[0], cur_path_physical_link[1]] = cur_path_required_capacityOneThree
-                        physicalEdgeOccupiedCapacityOneThreeDic[
-                            cur_path_physical_link[1], cur_path_physical_link[0]] = cur_path_required_capacityOneThree
-                        physicalEdgeOccupiedCapacityOneFiveDic[
-                            cur_path_physical_link[0], cur_path_physical_link[1]] = cur_path_required_capacityOneFive
-                        physicalEdgeOccupiedCapacityOneFiveDic[
-                            cur_path_physical_link[1], cur_path_physical_link[0]] = cur_path_required_capacityOneFive
-                    else:
-                        physicalEdgeOccupiedCapacityOneOneDic[cur_path_physical_link[0], cur_path_physical_link[1]] += 1
-                        physicalEdgeOccupiedCapacityOneOneDic[cur_path_physical_link[1], cur_path_physical_link[0]] += 1
-                        physicalEdgeOccupiedCapacityOneThreeDic[
-                            cur_path_physical_link[0], cur_path_physical_link[1]] += cur_path_required_capacityOneThree
-                        physicalEdgeOccupiedCapacityOneThreeDic[
-                            cur_path_physical_link[1], cur_path_physical_link[0]] += cur_path_required_capacityOneThree
-                        physicalEdgeOccupiedCapacityOneFiveDic[
-                            cur_path_physical_link[0], cur_path_physical_link[1]] += cur_path_required_capacityOneFive
-                        physicalEdgeOccupiedCapacityOneFiveDic[
-                            cur_path_physical_link[1], cur_path_physical_link[0]] += cur_path_required_capacityOneFive
-                    # except Exception as e:
-                    #     print(e)
-
-            totalCapacityOneOne = sum(physicalEdgeOccupiedCapacityOneOneDic.values()) / 2
-            totalCapacityOneThree = sum(physicalEdgeOccupiedCapacityOneThreeDic.values()) / 2
-            totalCapacityOneFive = sum(physicalEdgeOccupiedCapacityOneFiveDic.values()) / 2
-            maxCapacityOneOne = max(physicalEdgeOccupiedCapacityOneOneDic.values())
-            maxCapacityOneThree = max(physicalEdgeOccupiedCapacityOneThreeDic.values())
-            maxCapacityOneFive = max(physicalEdgeOccupiedCapacityOneFiveDic.values())
-
             print("\n############# DATAFILE", datafile, "###############")
             print("Total availability:", totAv)
             print("Total wavelength consumption:", totW)
             print("TotMaps:", totMaps)
-
-            if scenario == 1:
-                requests_folder = "requests/tokyo-5nodesVN-Capacity/"
-                requests_folder = requests_folder + str(cur_num_vn) + "vn/" + str(cur_num_vl) + "vl/"
-                # create the folder if it does not exist
-                # if not os.path.exists(results_folder):
-                # os.makedirs(results_folder)
-                try:
-                    if not os.path.exists(requests_folder):
-                        os.makedirs(requests_folder)
-                except Exception as e:
-                    print(e)
-                requests_file = requests_folder + "instance_" + str(datafile) + "_OneFive.obj"
-                with open(requests_file, 'wb') as f:
-                    pickle.dump(virtualLinkRequirementOneFiveDic, f)
-                requests_file = requests_folder + "instance_" + str(datafile) + "_OneThree.obj"
-                with open(requests_file, 'wb') as f:
-                    pickle.dump(virtualLinkRequirementOneThreeDic, f)
 
             sum_av += totAv
             sum_wave += totW
@@ -2110,7 +1883,7 @@ if __name__ == '__main__':
 
             cur_availability = round(totAv / ((num_vn * numFail)) * 100, 2)
 
-            results_folder = "results/tokyo-5nodesVN-Capacity/"
+            results_folder = "results/german-modified/"
             results_folder = results_folder + str(cur_num_vn) + "vn/" + str(cur_num_vl) + "vl/"
             # create the folder if it does not exist
             # if not os.path.exists(results_folder):
@@ -2123,10 +1896,7 @@ if __name__ == '__main__':
             results_folder = results_folder + "scenario-" + str(scenario) + "_instance_" + str(datafile) + ".txt"
             with open(results_folder, 'w') as f:
                 line = str(cur_availability) + " " + str(totW) + " " + str(totNumVLwithSharing)
-                line = line + " " + str(averageNumVLwithSharing) + " " + str(time_elapsed)
-                line = line + " " + str(totalCapacityOneOne) + " " + str(totalCapacityOneThree) + " " + str(totalCapacityOneFive)
-                line = line + " " + str(maxCapacityOneOne) + " " + str(maxCapacityOneThree) + " " + str(maxCapacityOneFive)
-                line = line + "\n"
+                line = line + " " + str(averageNumVLwithSharing) + " " + str(time_elapsed) + "\n"
                 f.write(line)
 
         mean_av = sum_av / num_datafile
