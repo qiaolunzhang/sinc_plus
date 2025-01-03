@@ -66,7 +66,7 @@ for ((i=5; i<=25; i+=5)); do
     for ((k=1; k<=10; k+=1)); do
       # Uncomment the line below for your specific use case
       # python3 runHeuristicIns.py $j & # Example with a Python script
-      python3 SMART_SINC_SINC+_v2_loop_tokyo_paper_5nodesVN.py $i $j $k $k & # Running Python script with two arguments
+      python3 SMART_SINC_SINC+_v2_loop_tokyo_paper_5nodesVN_stimulated_annealing.py $i $j $k $k & # Running Python script with two arguments
       # cust_func $j & # Example with a custom function
     done
   done
@@ -79,60 +79,3 @@ done
 ## before displaying all done message
 wait
 
-# Loop from 1 to 100 in steps of 10
-for ((i=20; i<=20; i+=5)); do
-  # Launch a batch of 10 instances in parallel
-  for ((j=5; j<=10; j+=1)); do
-    # Loop over instances
-    for ((k=1; k<=10; k+=1)); do
-      # Uncomment the line below for your specific use case
-      # python3 runHeuristicIns.py $j & # Example with a Python script
-      python3 SMART_SINC_SINC+_v2_loop_tokyo_paper_5nodesVN.py $i $j $k $k & # Running Python script with two arguments
-      # cust_func $j & # Example with a custom function
-    done
-  done
-  # Wait for all background processes started in the loop to complete before continuing
-#  wait
-done
-
-wait
-
-################################# For shortest path one ##################################
-for ((i=5; i<=25; i+=5)); do
-  # Launch a batch of 10 instances in parallel
-  for ((j=6; j<=6; j+=1)); do
-    # Loop over instances
-    for ((k=1; k<=10; k+=1)); do
-      # Uncomment the line below for your specific use case
-      # python3 runHeuristicIns.py $j & # Example with a Python script
-      python3 SMART_SINC_SINC+_v2_loop_tokyo_paper_5nodesVN_shortest_path.py $i $j $k $k & # Running Python script with two arguments
-      # cust_func $j & # Example with a custom function
-    done
-  done
-  # Wait for all background processes started in the loop to complete before continuing
-#  wait
-done
-
-## Put all cust_func in the background and bash
-## would wait until those are completed
-## before displaying all done message
-wait
-
-# Loop from 1 to 100 in steps of 10
-for ((i=20; i<=20; i+=5)); do
-  # Launch a batch of 10 instances in parallel
-  for ((j=5; j<=10; j+=1)); do
-    # Loop over instances
-    for ((k=1; k<=10; k+=1)); do
-      # Uncomment the line below for your specific use case
-      # python3 runHeuristicIns.py $j & # Example with a Python script
-      python3 SMART_SINC_SINC+_v2_loop_tokyo_paper_5nodesVN_shortest_path.py $i $j $k $k & # Running Python script with two arguments
-      # cust_func $j & # Example with a custom function
-    done
-  done
-  # Wait for all background processes started in the loop to complete before continuing
-#  wait
-done
-
-wait
-echo "All done for all cases of sinc algorithm"
