@@ -944,7 +944,7 @@ if __name__ == '__main__':
         end_file = int(sys.argv[4])
     else:
         cur_num_vn = 5
-        cur_num_vl = 10
+        cur_num_vl = 6
         num_instances = 6
         start_file = 6
         end_file = num_instances

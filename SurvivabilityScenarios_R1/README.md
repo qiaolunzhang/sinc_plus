@@ -23,7 +23,6 @@
 4 - Two-step SINC (max AV) 
 5 - One-step SINC (min TWC) 
 6 - One-step SINC (max AV) 
-7 - One-step SINC+ (min TWC)
 
 
 ## Errors in the previous code

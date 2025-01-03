@@ -79,3 +79,42 @@ done
 ## before displaying all done message
 wait
 
+########################################## For the local search ########################################################f
+
+# Loop the number of virtual networks
+for ((i=5; i<=25; i+=5)); do
+  # loop over the number of virtual links
+  for ((j=6; j<=6; j+=1)); do
+    # Loop over different instances
+    for ((k=1; k<=10; k+=1)); do
+      # Uncomment the line below for your specific use case
+      # python3 runHeuristicIns.py $j & # Example with a Python script
+      python3 SMART_SINC_SINC+_v2_loop_tokyo_paper_5nodesVN_v2.py $i $j $k $k & # Running Python script with two arguments
+      # cust_func $j & # Example with a custom function
+    done
+  done
+  # Wait for all background processes started in the loop to complete before continuing
+#  wait
+done
+
+## Put all cust_func in the background and bash
+## would wait until those are completed
+## before displaying all done message
+wait
+
+
+################################# For shortest path one ##################################
+for ((i=5; i<=25; i+=5)); do
+  # Launch a batch of 10 instances in parallel
+  for ((j=6; j<=6; j+=1)); do
+    # Loop over instances
+    for ((k=1; k<=10; k+=1)); do
+      # Uncomment the line below for your specific use case
+      # python3 runHeuristicIns.py $j & # Example with a Python script
+      python3 SMART_SINC_SINC+_v2_loop_tokyo_paper_5nodesVN_shortest_path.py $i $j $k $k & # Running Python script with two arguments
+      # cust_func $j & # Example with a custom function
+    done
+  done
+  # Wait for all background processes started in the loop to complete before continuing
+#  wait
+done

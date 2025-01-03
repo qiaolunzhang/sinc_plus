@@ -685,6 +685,7 @@ def get_availability_gateways_shared_slice(totMaps, shMaps):
 
 def stimulated_annealing(totMaps, link, totCut, totAv, wave, scenario, no_increasing_wave_flag=True):
     temperature = 10
+    hop_distance_max = 1
 
     n_iterations = len(totMaps[link])
 
@@ -703,18 +704,38 @@ def stimulated_annealing(totMaps, link, totCut, totAv, wave, scenario, no_increa
         neighbor_step = random.randint(1, cur_num_mapped_links)
         # set the weight of the links
         P2 = P.copy()
-        # for plink in totMaps[link]:
-        for plink_index in range(neighbor_step):
-            plink = totMaps[link][plink_index]
-            P2 = P.copy()
-            mapping = []
 
-            # if(trials==0):
-            # print("Link",plink)
-            # Increment the weight of each physical link (once at time) already used to allow to find a disjoint mapping
+        # num_shortest_path = 20
+        # X = nx.shortest_simple_paths(P2, link[1], link[2])
+        # shortestKPaths = []
+        # for counter, path in enumerate(X):
+        #     #print(path)
+        #     shortestKPaths.append(path)
+        #     if counter == num_shortest_path - 1:
+        #         break
+        #     if len(path) > hop_distance_max + cur_num_mapped_links:
+        #         break
+        # # pick one path among shortestKPaths
+        # path_index = random.randint(0, len(shortestKPaths) - 1)
+        # sp = shortestKPaths[path_index]
+
+        # for plink in totMaps[link]:
+        # generate random number between 0 and len(totMaps[link]
+        plink_start_index = random.randint(0, len(totMaps[link]) - 1)
+        for plink_index in range(plink_start_index, plink_start_index + neighbor_step):
+            if plink_index >= len(totMaps[link]):
+                break
+            plink = totMaps[link][plink_index]
             P2[plink[0]][plink[1]]['weight'] += 10
+
+        # for plink_index in range(neighbor_step):
+        #     plink = totMaps[link][plink_index]
+        #     # Increment the weight of each physical link (once at time) already used to allow to find a disjoint mapping
+        #     P2[plink[0]][plink[1]]['weight'] += 10
+
         sp = nx.shortest_path(P2, source=link[1], target=link[2],
                               weight='weight')
+        mapping = []
         sp_links = []
         for jP in range(len(sp)):
             if jP < len(sp) - 1:
@@ -738,11 +759,17 @@ def stimulated_annealing(totMaps, link, totCut, totAv, wave, scenario, no_increa
 
             # python random.random() function returns a random float number between 0.0 to 1.0
             stimulated_accept_flag = False
-            if  random.random() < math.exp((totAv - new_av) / t):
+            if  random.random() < math.exp(- (totAv - new_av) / t) and totAv != new_av:
                 stimulated_accept_flag = True
 
+                if totAv > new_av:
+                    test = True
+
+            # stimulated_accept_flag = False
+
             if (new_av > totAv) or stimulated_accept_flag:
-                print("Availability improved, new mapping saved")
+                if (new_av > best_eval_AV):
+                    print("Availability improved, new mapping saved")
                 # Compute number of wavelengths used for the mapping of the new link
                 numWaveNew = 0
                 numWave = 0
@@ -773,8 +800,9 @@ def stimulated_annealing(totMaps, link, totCut, totAv, wave, scenario, no_increa
                 else:
                     # scenario 1 or 3
                     # If wavelengths consumption is smaller or equal than before, then save the new mapping
-                    if (numWaveNew * 2 <= numWave * 2) or stimulated_accept_flag:
+                    if (new_av > best_eval_AV):
                         print("Availability improved, new mapping saved")
+                    if (numWaveNew * 2 <= numWave * 2) or stimulated_accept_flag:
                         totMaps[link] = newMap[link]
                         totAv = new_av
 
@@ -944,7 +972,7 @@ if __name__ == '__main__':
         end_file = int(sys.argv[4])
     else:
         cur_num_vn = 5
-        cur_num_vl = 10
+        cur_num_vl = 6
         num_instances = 6
         start_file = 6
         end_file = num_instances
